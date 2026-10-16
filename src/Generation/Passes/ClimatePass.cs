@@ -1,148 +1,171 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
+using System.Collections.Generic;
 using RimWorld.Planet;
 using UnityEngine;
 using Verse;
+using Planetsmith.Compatibility;
 
-namespace Planetsmith.Gen.Passes
+namespace Planetsmith.Generation.Passes;
+
+/// <summary>
+/// Assigns each tile an annual mean temperature and rainfall from a compact
+/// latitude + elevation model. This is deliberately a first approximation:
+/// dedicated wind, orographic, and monsoon passes will refine it later.
+/// </summary>
+public sealed class ClimatePass : IGenerationPass
 {
+	//// Constants
+	
+	// Environmental lapse: temperature falls with elevation above a threshold, at
+	// roughly 6 deg C per kilometre, capped so peaks don't run away.
+	private const float LAPSE_START_ALTITUDE = 250f;
+	private const float LAPSE_RATE_PER_METRE = 0.006f;
+	private const float MAXIMUM_LAPSE_REDUCTION = 45f;
+	
+	// Latitude of, and spread around, each rainfall band (degrees).
+	private const float BAND_SPREAD = 17f;
+	private const float SUBTROPICAL_DRY_LATITUDE = 25f;
+	private const float MID_LATITUDE_WET_LATITUDE = 50f;
+	
+	// The dry belt is narrower than the wet belts either side of it. Air sinks back to
+	// the ground over a tighter run of latitudes than the two it rose over, so giving all
+	// three the same width spread the drought far past where it belongs: it was still
+	// taking half the rain at 35 degrees and a third at 40, latitudes that should be
+	// Mediterranean and temperate. That left the most habitable band of the planet as
+	// desert, with the deserts themselves no drier for it.
+	private const float SUBTROPICAL_SPREAD = 10f;
+	
+	// Rain that reaches everywhere, before the belts add their share.
+	private const float BASE_RAINFALL = 450f;
+	
+	// Peak rain each wet belt adds, in mm a year.
+	private const float EQUATORIAL_RAINFALL = 2600f;
+	private const float MID_LATITUDE_RAINFALL = 1000f;
+	
+	// How much of the rain the subtropical high holds back at its worst.
+	private const float SUBTROPICAL_SUPPRESSION = 0.72f;
+	
+	// Crude high-elevation drying, a stand-in until orographic rain shadows land: rain
+	// thins from this height upwards, down to a share of itself over the span above it.
+	private const float HIGH_DRYING_START = 1000f;
+	private const float HIGH_DRYING_SPAN = 3000f;
+	private const float HIGH_DRYING_FLOOR = 0.5f;
+	
+	// Strength of the coherent noise that dapples the otherwise-smooth bands.
+	private const float TEMPERATURE_NOISE_AMPLITUDE = 4f; // deg C
+	private const float RAINFALL_NOISE_AMPLITUDE = 0.35f; // fraction of local rainfall
+	
 	/// <summary>
-	/// Assigns each tile an annual mean temperature and rainfall from a compact
-	/// latitude + elevation model. This is deliberately a first approximation:
-	/// dedicated wind, orographic, and monsoon passes will refine it later.
+	/// How much of the equator-to-pole warmth survives at a given fraction of the way
+	/// to the pole. Sunlight thins out faster than a plain cosine suggests once past
+	/// the tropics, and this follows the profile RimWorld itself uses, which is what
+	/// the biome workers were balanced against. A gentler falloff leaves the middle
+	/// latitudes several degrees too warm and pushes hot, dry biomes polewards.
 	/// </summary>
-	public sealed class ClimatePass : IGenPass
+	private static readonly SimpleCurve LATITUDE_WARMTH_CURVE = new()
 	{
-		public string Name => "Climate";
-
-		// Environmental lapse: temperature falls with elevation above a threshold,
-		// at roughly 6 deg C per kilometre, capped so peaks don't run away.
-		private const float LapseStartAltitude = 250f;
-		private const float LapseRatePerMetre = 0.006f;
-		private const float MaxLapseReduction = 45f;
-
-		// Latitude of, and spread around, each rainfall band (degrees).
-		private const float BandSpread = 17f;
-		private const float SubtropicalDryLatitude = 25f;
-		private const float MidLatitudeWetLatitude = 50f;
-		// The dry belt is narrower than the wet belts either side of it. Air sinks back to
-		// the ground over a tighter run of latitudes than the two it rose over, so giving
-		// all three the same width spread the drought far past where it belongs: it was
-		// still taking half the rain at 35 degrees and a third at 40, latitudes that should
-		// be Mediterranean and temperate. That left the most habitable band of the planet
-		// as desert, with the deserts themselves no drier for it.
-		private const float SubtropicalSpread = 10f;
-
-		// Rain that reaches everywhere, before the belts add their share.
-		private const float BaseRainfall = 450f;
-		// How much of the rain the subtropical high holds back at its worst.
-		private const float SubtropicalSuppression = 0.72f;
-
-		/// <summary>
-		/// How much of the equator-to-pole warmth survives at a given fraction of the way
-		/// to the pole. Sunlight thins out faster than a plain cosine suggests once past
-		/// the tropics, and this follows the profile RimWorld itself uses, which is what
-		/// the biome workers were balanced against. A gentler falloff leaves the middle
-		/// latitudes several degrees too warm and pushes hot, dry biomes polewards.
-		/// </summary>
-		private static readonly SimpleCurve LatitudeWarmthCurve = new SimpleCurve
+		new CurvePoint(0f, 1f),
+		new CurvePoint(0.1f, 0.985f),
+		new CurvePoint(0.5f, 0.657f),
+		new CurvePoint(1f, 0f),
+	};
+	
+	//// Private Functions
+	
+	private static float Temperature(GenerationContext context, float latitude, float elevation)
+	{
+		// Warm the latitude between pole and equator
+		// The warmth is 1 at the equator and 0 at the poles.
+		float warmth = LATITUDE_WARMTH_CURVE.Evaluate(Mathf.Clamp01(Mathf.Abs(latitude) / 90f));
+		float baseTemperature = Mathf.Lerp(context.PoleMeanTemperature, context.EquatorMeanTemperature, warmth);
+		
+		// Take another mod's answer for what the tilt does
+		// Where another mod works out what the tilt does to the sunlight a latitude
+		// receives, take its answer here rather than ours. Folding it in this early
+		// matters: everything after this reads the temperature we write, so the seasons,
+		// the frost gates and the biomes all end up describing the same planet the player
+		// will actually be living on.
+		if (context.IsTiltHandledExternally)
 		{
-			new CurvePoint(0f, 1f),
-			new CurvePoint(0.1f, 0.985f),
-			new CurvePoint(0.5f, 0.657f),
-			new CurvePoint(1f, 0f),
-		};
-
-		// Strength of the coherent noise that dapples the otherwise-smooth bands.
-		private const float TemperatureNoiseAmplitude = 4f; // deg C
-		private const float RainfallNoiseAmplitude = 0.35f; // fraction of local rainfall
-
-		public void Run(GenContext ctx)
-		{
-			PlanetLayer layer = ctx.Layer;
-			var tiles = layer.Tiles;
-			double vanillaTotal = 0d;
-			int vanillaLand = 0;
-			for (int i = 0; i < tiles.Count; i++)
-			{
-				Tile tile = tiles[i];
-
-				// Read before we overwrite it. This is the only moment vanilla's own
-				// rainfall still exists, and it is the yardstick for whether the rivers the
-				// game builds afterwards have as much water to work with as they used to.
-				if (tile.elevation > 0f)
-				{
-					vanillaTotal += tile.rainfall;
-					vanillaLand++;
-				}
-
-				float lat = layer.LongLatOf(i).y;
-				Vector3 center = layer.GetTileCenter(i);
-
-				float tempOffset = ctx.TemperatureNoise.GetValue(center) * TemperatureNoiseAmplitude;
-				float rainFactor = 1f + Mathf.Clamp(ctx.RainfallNoise.GetValue(center), -1f, 1f) * RainfallNoiseAmplitude;
-
-				tile.temperature = Temperature(ctx, lat, tile.elevation) + tempOffset;
-				tile.rainfall = Mathf.Max(0f, Rainfall(ctx, lat, tile.elevation) * rainFactor);
-			}
-
-			ctx.VanillaRainfallMean = vanillaLand > 0 ? (float)(vanillaTotal / vanillaLand) : 0f;
+			baseTemperature += ModCompatibility.AnnualTemperatureCorrection(latitude);
 		}
-
-		private static float Temperature(GenContext ctx, float lat, float elevation)
+		
+		// Cool the air with height
+		float lapse = 0f;
+		if (elevation > LAPSE_START_ALTITUDE)
 		{
-			// 1 at the equator, 0 at the poles.
-			float warmth = LatitudeWarmthCurve.Evaluate(Mathf.Clamp01(Mathf.Abs(lat) / 90f));
-			float baseTemp = Mathf.Lerp(ctx.PoleMeanTemp, ctx.EquatorMeanTemp, warmth);
-
-			// Where another mod works out what the tilt does to the sunlight a latitude
-			// receives, take its answer here rather than ours. Folding it in this early
-			// matters: everything after this reads the temperature we write, so the
-			// seasons, the frost gates and the biomes all end up describing the same
-			// planet the player will actually be living on.
-			if (ctx.TiltHandledExternally)
-			{
-				baseTemp += Compat.ModCompat.AnnualTemperatureCorrection(lat);
-			}
-
-			float lapse = 0f;
-			if (elevation > LapseStartAltitude)
-			{
-				lapse = Mathf.Min(MaxLapseReduction, (elevation - LapseStartAltitude) * LapseRatePerMetre * ctx.Tuning.elevationCooling);
-			}
-			return baseTemp - lapse + ctx.Tuning.temperatureOffset;
+			lapse = Mathf.Min(MAXIMUM_LAPSE_REDUCTION, (elevation - LAPSE_START_ALTITUDE) * LAPSE_RATE_PER_METRE * context.Tuning.elevationCooling);
 		}
-
-		private static float Rainfall(GenContext ctx, float lat, float elevation)
+		return baseTemperature - lapse + context.Tuning.temperatureOffset;
+	}
+	
+	private static float Rainfall(GenerationContext context, float latitude, float elevation)
+	{
+		// Add the two wet belts every planet has
+		// Rain rising off the equator, and the storm track of the middle latitudes.
+		float absoluteLatitude = Mathf.Abs(latitude);
+		float equatorial = EQUATORIAL_RAINFALL * ClimateMath.Gaussian(absoluteLatitude, 0f, BAND_SPREAD);
+		float midLatitude = MID_LATITUDE_RAINFALL * ClimateMath.Gaussian(absoluteLatitude, MID_LATITUDE_WET_LATITUDE, BAND_SPREAD);
+		float rain = BASE_RAINFALL + equatorial + midLatitude;
+		
+		// Hold the rain down under the subtropical high
+		// Between the belts sits the subtropical high, where descending air suppresses
+		// rain. It has to hold rainfall down rather than subtract from it: taking a fixed
+		// amount away drove the whole belt to nothing at all, and nothing is a floor that
+		// mountains, coasts and every tuning dial multiply straight back into nothing. A
+		// desert should be dry, not empty.
+		rain *= 1f - SUBTROPICAL_SUPPRESSION * ClimateMath.Gaussian(absoluteLatitude, SUBTROPICAL_DRY_LATITUDE, SUBTROPICAL_SPREAD);
+		
+		// Scale by the world's rainfall and the player's tuning
+		rain *= context.RainfallMultiplier * context.Tuning.rainfallScale;
+		
+		// Dry out the high ground
+		if (elevation > HIGH_DRYING_START)
 		{
-			float a = Mathf.Abs(lat);
-			// The two wet belts every planet has: rain rising off the equator, and the
-			// storm track of the middle latitudes.
-			float equatorial = 2600f * Gaussian(a, 0f, BandSpread);
-			float midLatitude = 1000f * Gaussian(a, MidLatitudeWetLatitude, BandSpread);
-			float rain = BaseRainfall + equatorial + midLatitude;
-
-			// Between them sits the subtropical high, where descending air suppresses
-			// rain. It has to hold rainfall down rather than subtract from it: taking a
-			// fixed amount away drove the whole belt to nothing at all, and nothing is a
-			// floor that mountains, coasts and every tuning dial multiply straight back
-			// into nothing. A desert should be dry, not empty.
-			rain *= 1f - SubtropicalSuppression * Gaussian(a, SubtropicalDryLatitude, SubtropicalSpread);
-
-			rain *= ctx.RainfallMultiplier * ctx.Tuning.rainfallScale;
-
-			// Crude high-elevation drying, a stand-in until orographic rain shadows land.
-			if (elevation > 1000f)
-			{
-				rain *= Mathf.Lerp(1f, 0.5f, Mathf.Clamp01((elevation - 1000f) / 3000f));
-			}
-			return rain;
+			rain *= Mathf.Lerp(1f, HIGH_DRYING_FLOOR, Mathf.Clamp01((elevation - HIGH_DRYING_START) / HIGH_DRYING_SPAN));
 		}
-
-		private static float Gaussian(float x, float mean, float sigma)
+		return rain;
+	}
+	
+	//// Public API
+	
+	public string Name => "Climate";
+	
+	public void Run(GenerationContext context)
+	{
+		PlanetLayer layer = context.Layer;
+		List<Tile> tiles = layer.Tiles;
+		double vanillaTotal = 0d;
+		int vanillaLand = 0;
+		for (int tileId = 0; tileId < tiles.Count; tileId++)
 		{
-			float d = (x - mean) / sigma;
-			return Mathf.Exp(-d * d);
+			// Measure vanilla's rainfall before replacing it
+			// This is the only moment vanilla's own rainfall still exists, and it is the
+			// yardstick for whether the rivers the game builds afterwards have as much
+			// water to work with as they used to.
+			Tile tile = tiles[tileId];
+			if (tile.elevation > 0f)
+			{
+				vanillaTotal += tile.rainfall;
+				vanillaLand++;
+			}
+			
+			// Work out the climate from latitude and height, dappled by the noise
+			float latitude = layer.LongLatOf(tileId).y;
+			Vector3 center = layer.GetTileCenter(tileId);
+			float temperatureOffset = context.TemperatureNoise.GetValue(center) * TEMPERATURE_NOISE_AMPLITUDE;
+			float rainfallFactor = 1f + Mathf.Clamp(context.RainfallNoise.GetValue(center), -1f, 1f) * RAINFALL_NOISE_AMPLITUDE;
+			tile.temperature = Temperature(context, latitude, tile.elevation) + temperatureOffset;
+			tile.rainfall = Mathf.Max(0f, Rainfall(context, latitude, tile.elevation) * rainfallFactor);
 		}
+		
+		// Keep vanilla's mean for the river report
+		// Summed in double to keep a whole planet's rainfall exact; a float is plenty for
+		// the mean.
+		context.VanillaRainfallMean = vanillaLand > 0 ? (float)(vanillaTotal / vanillaLand) : 0f;
 	}
 }

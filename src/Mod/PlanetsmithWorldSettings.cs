@@ -1,180 +1,143 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
 using System.Collections.Generic;
 using Verse;
 
-namespace Planetsmith
+namespace Planetsmith;
+
+/// <summary>
+/// The generation parameters belonging to one particular planet, as opposed to the
+/// mod-wide preferences that seed them. These travel with the world: they are chosen
+/// on the world creation page, used while generating, and saved into the game.
+/// </summary>
+public class PlanetsmithWorldSettings : IExposable
 {
+	//// References and State
+	
+	public bool isSeaLevelControlEnabled;
+	public float targetLandFraction;
+	public float axialTilt;
+	
+	/// <summary>Dials on the climate model for this planet.</summary>
+	public ClimateTuning tuning = new();
+	
 	/// <summary>
-	/// The generation parameters belonging to one particular planet, as opposed to the
-	/// mod-wide preferences that seed them. These travel with the world: they are chosen
-	/// on the world creation page, used while generating, and saved into the game.
+	/// Per-biome adjustments, keyed by defName. Only biomes the player has actually
+	/// touched are stored; everything absent behaves as its worker intends.
 	/// </summary>
-	public class PlanetsmithWorldSettings : IExposable
+	private Dictionary<string, BiomeSettings> biomes = new();
+	
+	/// <summary>True once the player has moved any biome away from how its worker scores it.</summary>
+	public bool HasAdjustedBiomes
 	{
-		public bool enableSeaLevelControl;
-		public float targetLandFraction;
-		public float axialTilt;
-
-		/// <summary>Dials on the climate model for this planet.</summary>
-		public ClimateTuning tuning = new ClimateTuning();
-
-		/// <summary>
-		/// Per-biome adjustments, keyed by defName. Only biomes the player has actually
-		/// touched are stored; everything absent behaves as its worker intends.
-		/// </summary>
-		private Dictionary<string, BiomeSettings> biomes = new Dictionary<string, BiomeSettings>();
-
-		/// <summary>Settings for a biome, creating a default entry the first time it is asked for.</summary>
-		public BiomeSettings ForBiome(string defName)
+		get
 		{
-			if (!biomes.TryGetValue(defName, out BiomeSettings settings))
+			foreach (BiomeSettings settings in biomes.Values)
 			{
-				settings = new BiomeSettings();
-				biomes[defName] = settings;
-			}
-			return settings;
-		}
-
-		/// <summary>Settings for a biome, or null when it has never been adjusted.</summary>
-		public BiomeSettings ForBiomeOrNull(string defName)
-		{
-			return biomes.TryGetValue(defName, out BiomeSettings settings) ? settings : null;
-		}
-
-		public void ResetAllBiomes()
-		{
-			biomes.Clear();
-		}
-
-		public bool AnyBiomeAdjusted
-		{
-			get
-			{
-				foreach (BiomeSettings settings in biomes.Values)
+				if (!settings.IsDefault)
 				{
-					if (!settings.IsDefault)
-					{
-						return true;
-					}
+					return true;
 				}
-				return false;
 			}
-		}
-
-		/// <summary>
-		/// True once the player has switched a biome off. That turns a planet into a
-		/// deliberately narrowed one, where the remaining biomes are meant to take ground
-		/// they would not otherwise have earned.
-		/// </summary>
-		public bool AnyBiomeDisabled
-		{
-			get
-			{
-				foreach (BiomeSettings settings in biomes.Values)
-				{
-					if (!settings.enabled)
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		}
-
-		public PlanetsmithWorldSettings()
-		{
-			CopyFrom(PlanetsmithMod.Settings);
-		}
-
-		public void CopyFrom(PlanetsmithSettings defaults)
-		{
-			if (defaults == null)
-			{
-				enableSeaLevelControl = false;
-				targetLandFraction = 0.4f;
-				axialTilt = 23.4f;
-				return;
-			}
-			enableSeaLevelControl = defaults.enableSeaLevelControl;
-			targetLandFraction = defaults.targetLandFraction;
-			axialTilt = defaults.axialTilt;
-		}
-
-		public PlanetsmithWorldSettings Clone()
-		{
-			var clone = new PlanetsmithWorldSettings
-			{
-				enableSeaLevelControl = enableSeaLevelControl,
-				targetLandFraction = targetLandFraction,
-				axialTilt = axialTilt,
-				tuning = tuning.Clone(),
-			};
-			foreach (var pair in biomes)
-			{
-				clone.biomes[pair.Key] = pair.Value.Clone();
-			}
-			return clone;
-		}
-
-		public void ExposeData()
-		{
-			Scribe_Values.Look(ref enableSeaLevelControl, "enableSeaLevelControl", defaultValue: false);
-			Scribe_Values.Look(ref targetLandFraction, "targetLandFraction", 0.4f);
-			Scribe_Values.Look(ref axialTilt, "axialTilt", 23.4f);
-			Scribe_Deep.Look(ref tuning, "tuning");
-			if (Scribe.mode == LoadSaveMode.PostLoadInit && tuning == null)
-			{
-				tuning = new ClimateTuning();
-			}
-			Scribe_Collections.Look(ref biomes, "biomes", LookMode.Value, LookMode.Deep);
-			if (Scribe.mode == LoadSaveMode.PostLoadInit && biomes == null)
-			{
-				biomes = new Dictionary<string, BiomeSettings>();
-			}
+			return false;
 		}
 	}
-
-	/// <summary>
-	/// Holds the parameters the player is currently editing on the world creation page.
-	/// Generation reads these, and the world component copies them so they persist with
-	/// the finished planet.
-	/// </summary>
-	public static class PlanetsmithWorldParams
+	
+	//// Public API
+	
+	public PlanetsmithWorldSettings()
 	{
-		private static PlanetsmithWorldSettings pending;
-
-		/// <summary>Parameters for the world about to be created; seeded from the mod defaults.</summary>
-		public static PlanetsmithWorldSettings Pending
+		CopyFrom(PlanetsmithMod.Settings);
+	}
+	
+	public void CopyFrom(PlanetsmithSettings? defaults)
+	{
+		// Fall back to the built-in defaults before the mod has loaded its own
+		if (defaults == null)
 		{
-			get
-			{
-				if (pending == null)
-				{
-					pending = new PlanetsmithWorldSettings();
-				}
-				return pending;
-			}
-			set => pending = value;
+			isSeaLevelControlEnabled = false;
+			targetLandFraction = PlanetsmithSettings.DEFAULT_TARGET_LAND_FRACTION;
+			axialTilt = PlanetsmithSettings.DEFAULT_AXIAL_TILT;
+			return;
 		}
-
-		/// <summary>Re-seed the pending parameters from the mod-wide defaults.</summary>
-		public static void ResetToDefaults()
+		
+		// Copy the mod-wide defaults
+		isSeaLevelControlEnabled = defaults.isSeaLevelControlEnabled;
+		targetLandFraction = defaults.targetLandFraction;
+		axialTilt = defaults.axialTilt;
+	}
+	
+	/// <summary>Settings for a biome, creating a default entry the first time it is asked for.</summary>
+	public BiomeSettings ForBiome(string defName)
+	{
+		// Reuse the existing entry
+		if (biomes.TryGetValue(defName, out BiomeSettings settings))
 		{
-			pending = new PlanetsmithWorldSettings();
+			return settings;
 		}
-
-		/// <summary>
-		/// The parameters generation should obey: the current world's own settings when
-		/// it has them, otherwise whatever is pending for the world being made.
-		/// </summary>
-		public static PlanetsmithWorldSettings Active
+		
+		// Create a default one
+		settings = new BiomeSettings();
+		biomes[defName] = settings;
+		return settings;
+	}
+	
+	/// <summary>Settings for a biome, or null when it has never been adjusted.</summary>
+	public BiomeSettings? ForBiomeOrNull(string defName)
+	{
+		return biomes.TryGetValue(defName, out BiomeSettings? settings) ? settings : null;
+	}
+	
+	public void ResetAllBiomes()
+	{
+		biomes.Clear();
+	}
+	
+	public PlanetsmithWorldSettings Clone()
+	{
+		// Copy the planet's own values
+		PlanetsmithWorldSettings clone = new()
 		{
-			get
-			{
-				PlanetsmithWorldSettings stored = Find.World?.GetComponent<PlanetsmithWorldComponent>()?.Settings;
-				return stored ?? Pending;
-			}
+			isSeaLevelControlEnabled = isSeaLevelControlEnabled,
+			targetLandFraction = targetLandFraction,
+			axialTilt = axialTilt,
+			tuning = tuning.Clone(),
+		};
+		
+		// Copy each biome's adjustments
+		foreach (KeyValuePair<string, BiomeSettings> pair in biomes)
+		{
+			clone.biomes[pair.Key] = pair.Value.Clone();
+		}
+		return clone;
+	}
+	
+	//// Event Wiring
+	
+	public void ExposeData()
+	{
+		// Save or load the planet's own values
+		// The sea level label keeps the field's old name, so planets and presets saved
+		// before the rename still load.
+		Scribe_Values.Look(ref isSeaLevelControlEnabled, "enableSeaLevelControl", defaultValue: false);
+		Scribe_Values.Look(ref targetLandFraction, "targetLandFraction", PlanetsmithSettings.DEFAULT_TARGET_LAND_FRACTION);
+		Scribe_Values.Look(ref axialTilt, "axialTilt", PlanetsmithSettings.DEFAULT_AXIAL_TILT);
+		
+		// Save or load the climate tuning, filling it in for saves that have none
+		Scribe_Deep.Look(ref tuning, "tuning");
+		if (Scribe.mode == LoadSaveMode.PostLoadInit && tuning == null)
+		{
+			tuning = new ClimateTuning();
+		}
+		
+		// Save or load the biome adjustments, filling them in for saves that have none
+		Scribe_Collections.Look(ref biomes, "biomes", LookMode.Value, LookMode.Deep);
+		if (Scribe.mode == LoadSaveMode.PostLoadInit && biomes == null)
+		{
+			biomes = new Dictionary<string, BiomeSettings>();
 		}
 	}
 }

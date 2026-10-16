@@ -1,79 +1,91 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
 using System.Collections.Generic;
 using RimWorld.Planet;
 using UnityEngine;
 
-namespace Planetsmith.Gen.Passes
+namespace Planetsmith.Generation.Passes;
+
+/// <summary>
+/// Continentality as distance from the sea: a multi-source flood fill outward from
+/// every ocean tile gives each land tile its graph distance to the nearest coast,
+/// which maps to 0 (maritime) at the shore up to 1 (fully continental) deep inland.
+/// This is isotropic on purpose. Maritime influence comes from being next to water,
+/// not from the wind, so every coast fades smoothly regardless of wind direction.
+/// (The one-directional downwind model stays where it belongs, in rainfall.) The
+/// result feeds the seasonality swing.
+/// </summary>
+public sealed class ContinentalityPass : IGenerationPass
 {
-	/// <summary>
-	/// Continentality as distance from the sea: a multi-source flood fill outward from
-	/// every ocean tile gives each land tile its graph distance to the nearest coast,
-	/// which maps to 0 (maritime) at the shore up to 1 (fully continental) deep inland.
-	/// This is isotropic on purpose. Maritime influence comes from being next to water,
-	/// not from the wind, so every coast fades smoothly regardless of wind direction.
-	/// (The one-directional downwind model stays where it belongs, in rainfall.) The
-	/// result feeds the seasonality swing.
-	/// </summary>
-	public sealed class ContinentalityPass : IGenPass
+	//// Constants
+	
+	// Tiles inland at which a location counts as fully continental.
+	private const int FULLY_CONTINENTAL_DISTANCE = 20;
+	private const float DISTANCE_SCALE = FULLY_CONTINENTAL_DISTANCE;
+	
+	// Distance of a tile the fill has not reached yet.
+	private const int UNREACHED = -1;
+	
+	//// References and State
+	
+	private static readonly List<PlanetTile> neighbors = new();
+	
+	//// Public API
+	
+	public string Name => "Continentality";
+	
+	public void Run(GenerationContext context)
 	{
-		public string Name => "Continentality";
-
-		// Tiles inland at which a location counts as fully continental.
-		private const float DistanceScale = 20f;
-
-		private static readonly List<PlanetTile> neighbors = new List<PlanetTile>();
-
-		public void Run(GenContext ctx)
+		// Start the fill from every ocean tile
+		PlanetLayer layer = context.Layer;
+		List<Tile> tiles = layer.Tiles;
+		int count = tiles.Count;
+		int[] distance = new int[count];
+		Queue<int> frontier = new();
+		for (int tileId = 0; tileId < count; tileId++)
 		{
-			PlanetLayer layer = ctx.Layer;
-			var tiles = layer.Tiles;
-			int count = tiles.Count;
-
-			int[] distance = new int[count];
-			for (int i = 0; i < count; i++)
+			distance[tileId] = UNREACHED;
+			if (tiles[tileId].elevation <= 0f)
 			{
-				distance[i] = -1;
+				distance[tileId] = 0;
+				frontier.Enqueue(tileId);
 			}
-
-			var frontier = new Queue<int>();
-			for (int i = 0; i < count; i++)
+		}
+		
+		// Spread inland one ring at a time
+		while (frontier.Count > 0)
+		{
+			int current = frontier.Dequeue();
+			layer.GetTileNeighbors(current, neighbors);
+			foreach (PlanetTile neighbor in neighbors)
 			{
-				if (tiles[i].elevation <= 0f)
+				int neighborId = neighbor.tileId;
+				if (neighborId < 0 || neighborId >= count || distance[neighborId] != UNREACHED)
 				{
-					distance[i] = 0;
-					frontier.Enqueue(i);
-				}
-			}
-
-			while (frontier.Count > 0)
-			{
-				int current = frontier.Dequeue();
-				layer.GetTileNeighbors(current, neighbors);
-				for (int k = 0; k < neighbors.Count; k++)
-				{
-					int nid = neighbors[k].tileId;
-					if (nid < 0 || nid >= count || distance[nid] != -1)
-					{
-						continue;
-					}
-					distance[nid] = distance[current] + 1;
-					frontier.Enqueue(nid);
-				}
-			}
-
-			for (int i = 0; i < count; i++)
-			{
-				if (tiles[i].elevation <= 0f)
-				{
-					ctx.Continentality[i] = 0f;
 					continue;
 				}
-				// distance < 0 would mean a landmass with no sea path at all; treat as fully continental.
-				int d = distance[i] < 0 ? (int)DistanceScale : distance[i];
-				ctx.CoastDistance[i] = d;
-				ctx.Continentality[i] = Mathf.Clamp01(d / DistanceScale);
+				distance[neighborId] = distance[current] + 1;
+				frontier.Enqueue(neighborId);
 			}
+		}
+		
+		// Turn each distance into continentality
+		for (int tileId = 0; tileId < count; tileId++)
+		{
+			if (tiles[tileId].elevation <= 0f)
+			{
+				context.Continentality[tileId] = 0f;
+				continue;
+			}
+			
+			// A landmass the fill never reached has no sea path at all, so it counts as
+			// fully continental.
+			int coastDistance = distance[tileId] < 0 ? FULLY_CONTINENTAL_DISTANCE : distance[tileId];
+			context.CoastDistance[tileId] = coastDistance;
+			context.Continentality[tileId] = Mathf.Clamp01(coastDistance / DISTANCE_SCALE);
 		}
 	}
 }

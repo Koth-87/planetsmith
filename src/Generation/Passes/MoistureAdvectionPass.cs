@@ -1,92 +1,104 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
+using System.Collections.Generic;
 using RimWorld.Planet;
 using UnityEngine;
 
-namespace Planetsmith.Gen.Passes
+namespace Planetsmith.Generation.Passes;
+
+/// <summary>
+/// Carries moisture inland from the oceans along the prevailing wind. Ocean tiles
+/// are saturated sources; over land the carried moisture decays with each tile of
+/// fetch, so continental interiors and tiles far downwind of the sea dry out. The
+/// resulting moisture field scales rainfall, adding continentality on top of the
+/// latitude bands (ClimatePass) and orographic effects (OrographyPass).
+///
+/// Each land tile draws moisture from the whole arc the wind arrives through (see
+/// <see cref="UpwindGraph"/>). Implemented as a wavefront relaxation: oceans stay
+/// saturated, and one tile of fetch resolves per step. Purely geometric and
+/// deterministic.
+/// </summary>
+public sealed class MoistureAdvectionPass : IGenerationPass
 {
-	/// <summary>
-	/// Carries moisture inland from the oceans along the prevailing wind. Ocean tiles
-	/// are saturated sources; over land the carried moisture decays with each tile of
-	/// fetch, so continental interiors and tiles far downwind of the sea dry out. The
-	/// resulting moisture field scales rainfall, adding continentality on top of the
-	/// latitude bands (ClimatePass) and orographic effects (OrographyPass).
-	///
-	/// Each land tile draws moisture from the whole arc the wind arrives through (see
-	/// <see cref="UpwindGraph"/>). Implemented as a wavefront relaxation: oceans stay
-	/// saturated, and one tile of fetch resolves per step. Purely geometric and
-	/// deterministic.
-	/// </summary>
-	public sealed class MoistureAdvectionPass : IGenPass
+	//// Constants
+	
+	// Fraction of moisture retained per land tile of fetch.
+	private const float LAND_RETENTION = 0.94f;
+	
+	// Furthest inland fetch resolved, in tiles.
+	private const int PROPAGATION_STEPS = 64;
+	
+	// Rainfall multiplier where no ocean moisture reaches (fully dry interior).
+	private const float DRIEST_RAINFALL_FACTOR = 0.45f;
+	
+	// Bounds on the player's reach dial, and on the retention it produces.
+	private const float MINIMUM_REACH = 0.01f;
+	private const float MINIMUM_RETENTION = 0.5f;
+	private const float MAXIMUM_RETENTION = 0.995f;
+	
+	//// Public API
+	
+	public string Name => "MoistureAdvection";
+	
+	public void Run(GenerationContext context)
 	{
-		// Fraction of moisture retained per land tile of fetch.
-		private const float LandRetention = 0.94f;
-		// Furthest inland fetch resolved, in tiles.
-		private const int PropagationSteps = 64;
-		// Rainfall multiplier where no ocean moisture reaches (fully dry interior).
-		private const float DriestRainfallFactor = 0.45f;
-
-		public string Name => "MoistureAdvection";
-
-		public void Run(GenContext ctx)
+		// Start with saturated air everywhere
+		List<Tile> tiles = context.Layer.Tiles;
+		int count = tiles.Count;
+		UpwindGraph graph = context.Upwind;
+		bool[] isLand = new bool[count];
+		float[] moisture = new float[count];
+		float[] next = new float[count];
+		for (int tileId = 0; tileId < count; tileId++)
 		{
-			PlanetLayer layer = ctx.Layer;
-			var tiles = layer.Tiles;
-			int count = tiles.Count;
-
-			UpwindGraph graph = ctx.Upwind;
-			bool[] isLand = new bool[count];
-			float[] moisture = new float[count];
-			float[] next = new float[count];
-			for (int i = 0; i < count; i++)
+			isLand[tileId] = tiles[tileId].elevation > 0f;
+			moisture[tileId] = 1f;
+		}
+		
+		// Carry the moisture inland, one tile of fetch per step
+		float retention = Mathf.Clamp(1f - (1f - LAND_RETENTION) / Mathf.Max(MINIMUM_REACH, context.Tuning.moistureReach), MINIMUM_RETENTION, MAXIMUM_RETENTION);
+		for (int step = 0; step < PROPAGATION_STEPS; step++)
+		{
+			for (int tileId = 0; tileId < count; tileId++)
 			{
-				isLand[i] = tiles[i].elevation > 0f;
-				moisture[i] = 1f;
-			}
-
-			float retention = Mathf.Clamp(1f - (1f - LandRetention) / Mathf.Max(0.01f, ctx.Tuning.moistureReach), 0.5f, 0.995f);
-			for (int step = 0; step < PropagationSteps; step++)
-			{
-				for (int i = 0; i < count; i++)
+				if (!isLand[tileId])
 				{
-					if (!isLand[i])
-					{
-						next[i] = 1f; // ocean: saturated source
-						continue;
-					}
-					int[] sources = graph.Sources[i];
-					if (sources == null)
-					{
-						next[i] = moisture[i]; // no upwind arc: leave unchanged
-						continue;
-					}
-					float[] weights = graph.Weights[i];
-					float acc = 0f;
-					for (int k = 0; k < sources.Length; k++)
-					{
-						acc += weights[k] * moisture[sources[k]];
-					}
-					next[i] = acc * retention;
-				}
-
-				float[] swap = moisture;
-				moisture = next;
-				next = swap;
-			}
-
-			for (int i = 0; i < count; i++)
-			{
-				// Share the settled field: it doubles as an onshore/offshore wind measure
-				// for the coastal passes, and it is far smoother than tracing a single
-				// upwind path across a hex grid.
-				ctx.OceanicMoisture[i] = Mathf.Clamp01(moisture[i]);
-				if (!isLand[i])
-				{
+					next[tileId] = 1f; // ocean: saturated source
 					continue;
 				}
-				float factor = Mathf.Lerp(DriestRainfallFactor, 1f, Mathf.Clamp01(moisture[i]));
-				tiles[i].rainfall = Mathf.Max(0f, tiles[i].rainfall * factor);
+				UpwindGraph.Source[]? sources = graph.Sources[tileId];
+				if (sources == null)
+				{
+					next[tileId] = moisture[tileId]; // no upwind arc: leave unchanged
+					continue;
+				}
+				float carried = 0f;
+				foreach (UpwindGraph.Source source in sources)
+				{
+					carried += source.Weight * moisture[source.TileId];
+				}
+				next[tileId] = carried * retention;
 			}
+			
+			(moisture, next) = (next, moisture);
+		}
+		
+		// Dry the rainfall wherever the air has run out
+		for (int tileId = 0; tileId < count; tileId++)
+		{
+			// Share the settled field: it doubles as an onshore/offshore wind measure for
+			// the coastal passes, and it is far smoother than tracing a single upwind path
+			// across a hex grid.
+			context.OceanicMoisture[tileId] = Mathf.Clamp01(moisture[tileId]);
+			if (!isLand[tileId])
+			{
+				continue;
+			}
+			float factor = Mathf.Lerp(DRIEST_RAINFALL_FACTOR, 1f, Mathf.Clamp01(moisture[tileId]));
+			tiles[tileId].rainfall = Mathf.Max(0f, tiles[tileId].rainfall * factor);
 		}
 	}
 }

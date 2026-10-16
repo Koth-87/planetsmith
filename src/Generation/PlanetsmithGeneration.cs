@@ -1,99 +1,110 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using RimWorld.Planet;
 using Verse;
-using Planetsmith.Gen.Passes;
+using Planetsmith.Generation.Passes;
 
-namespace Planetsmith.Gen
+namespace Planetsmith.Generation;
+
+/// <summary>
+/// Entry point for Planetsmith's world-generation work. Invoked after vanilla's
+/// terrain step has populated the surface layer; runs the ordered pass pipeline
+/// to override climate and biome assignment with Planetsmith's own model. A
+/// failing pass is logged and skipped, leaving vanilla's result in place.
+/// </summary>
+public static class PlanetsmithGeneration
 {
-	/// <summary>
-	/// Entry point for Planetsmith's world-generation work. Invoked after vanilla's
-	/// terrain step has populated the surface layer; runs the ordered pass pipeline
-	/// to override climate and biome assignment with Planetsmith's own model. A
-	/// failing pass is logged and skipped, leaving vanilla's result in place.
-	/// </summary>
-	public static class PlanetsmithGen
+	//// Constants
+	
+	private static readonly IGenerationPass[] PASSES =
 	{
-		private static readonly List<IGenPass> Passes = new List<IGenPass>
+		new SeaLevelPass(),
+		new ClimatePass(),
+		new OrographyPass(),
+		new MoistureAdvectionPass(),
+		new ContinentalityPass(),
+		new OceanCurrentPass(),
+		// Seasonality precedes the monsoon, which needs its summer-to-winter swing,
+		// and aridity comes after both so it weighs the final rainfall.
+		new SeasonalityPass(),
+		new MonsoonPass(),
+		new AridityPass(),
+		// Drainage needs the final rainfall, and swampiness needs the drainage.
+		new DrainagePass(),
+		new BasinLakePass(),
+		new SwampinessPass(),
+		new BiomePass(),
+	};
+	
+	//// Private Functions
+	
+	/// <summary>
+	/// Whether an exception is the game telling us the player has walked away from the
+	/// world being built. Backing out of generation aborts the thread it runs on, which
+	/// arrives here as a failure like any other and used to be reported as one, in red,
+	/// twice over: an aborting thread re-raises itself at the end of every catch it
+	/// passes through, so each handler on the way out had its say. Nothing has gone
+	/// wrong, and a player who has just pressed Back does not need telling.
+	/// </summary>
+	private static bool IsCancellation(Exception exception)
+	{
+		return exception is ThreadAbortException;
+	}
+	
+	//// Public API
+	
+	/// <summary>Runs every pass over the finished surface, then reports and keeps the climate it made.</summary>
+	public static void RunPostTerrain(PlanetLayer layer)
+	{
+		// Say where the tilt came from
+		GenerationContext context = new(layer);
+		if (context.IsTiltHandledExternally)
 		{
-			new SeaLevelPass(),
-			new ClimatePass(),
-			new OrographyPass(),
-			new MoistureAdvectionPass(),
-			new ContinentalityPass(),
-			new OceanCurrentPass(),
-			// Seasonality precedes the monsoon, which needs its summer-to-winter swing,
-			// and aridity comes after both so it weighs the final rainfall.
-			new SeasonalityPass(),
-			new MonsoonPass(),
-			new AridityPass(),
-			// Drainage needs the final rainfall, and swampiness needs the drainage.
-			new DrainagePass(),
-			new BasinLakePass(),
-			new SwampinessPass(),
-			new BiomePass(),
-		};
-
-		/// <summary>
-		/// Whether an exception is the game telling us the player has walked away from the
-		/// world being built. Backing out of generation aborts the thread it runs on, which
-		/// arrives here as a failure like any other and used to be reported as one, in red,
-		/// twice over: an aborting thread re-raises itself at the end of every catch it
-		/// passes through, so each handler on the way out had its say. Nothing has gone
-		/// wrong, and a player who has just pressed Back does not need telling.
-		/// </summary>
-		private static bool Cancelled(Exception e)
-		{
-			return e is System.Threading.ThreadAbortException;
+			// Worth saying out loud: a handover that quietly failed to happen would look
+			// exactly like one that worked, right up until the biomes came out describing a
+			// different planet from the one being played.
+			Log.Message($"[Planetsmith] Axial tilt of {context.AxialTilt:F1}° taken from Realistic Axial Tilt, along with what it does to each latitude's temperature.");
 		}
-
-		public static void RunPostTerrain(PlanetLayer layer)
+		
+		// Run the passes, timing each
+		Stopwatch timer = new();
+		List<string> timings = new(PASSES.Length);
+		long total = 0L;
+		foreach (IGenerationPass pass in PASSES)
 		{
-			var ctx = new GenContext(layer);
-			if (ctx.TiltHandledExternally)
+			try
 			{
-				// Worth saying out loud: a handover that quietly failed to happen would
-				// look exactly like one that worked, right up until the biomes came out
-				// describing a different planet from the one being played.
-				Log.Message($"[Planetsmith] Axial tilt of {ctx.AxialTilt:F1}° taken from Realistic Axial Tilt, along with what it does to each latitude's temperature.");
+				timer.Restart();
+				pass.Run(context);
+				timer.Stop();
+				total += timer.ElapsedMilliseconds;
+				timings.Add($"{pass.Name} {timer.ElapsedMilliseconds}ms");
 			}
-
-			var timer = new System.Diagnostics.Stopwatch();
-			var timings = new System.Text.StringBuilder();
-			long total = 0L;
-
-			for (int i = 0; i < Passes.Count; i++)
+			catch (Exception exception)
 			{
-				IGenPass pass = Passes[i];
-				try
+				timer.Stop();
+				if (IsCancellation(exception))
 				{
-					timer.Restart();
-					pass.Run(ctx);
-					timer.Stop();
-					total += timer.ElapsedMilliseconds;
-					timings.Append($"{pass.Name} {timer.ElapsedMilliseconds}ms, ");
+					throw;
 				}
-				catch (Exception e)
-				{
-					timer.Stop();
-					if (Cancelled(e))
-					{
-						throw;
-					}
-					Log.Error($"[Planetsmith] Generation pass '{pass.Name}' failed: {e}");
-				}
+				Log.Error($"[Planetsmith] Generation pass '{pass.Name}' failed: {exception}");
 			}
-
-			// World generation already takes a while, so it is worth being able to see at
-			// a glance whether Planetsmith is a meaningful part of the wait.
-			Log.Message($"[Planetsmith] Generated {ctx.TileCount} tiles in {total}ms ({timings.ToString().TrimEnd(' ', ',')}).");
-
-			ClimateReport.Log(ctx);
-
-			// Keep the derived climate fields around for the debug overlays.
-			PlanetsmithClimateCache.Store(ctx);
 		}
+		
+		// Report the time taken
+		// World generation already takes a while, so it is worth being able to see at a
+		// glance whether Planetsmith is a meaningful part of the wait.
+		Log.Message($"[Planetsmith] Generated {context.TileCount} tiles in {total}ms ({string.Join(", ", timings)}).");
+		
+		// Report the climate and keep it for the overlays
+		ClimateReport.LogSummary(context);
+		PlanetsmithClimateCache.Store(context);
 	}
 }

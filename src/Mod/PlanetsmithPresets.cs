@@ -1,147 +1,176 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 aspctt
+
+//// Dependencies
+
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Text;
 using Verse;
 
-namespace Planetsmith
+namespace Planetsmith;
+
+/// <summary>
+/// Named sets of planet parameters, kept as individual files beside RimWorld's own
+/// saves so they outlive any one world and can be shared. A preset stores everything
+/// the world creation dialog can change, biome adjustments included.
+/// </summary>
+public static class PlanetsmithPresets
 {
-	/// <summary>
-	/// Named sets of planet parameters, kept as individual files beside RimWorld's own
-	/// saves so they outlive any one world and can be shared. A preset stores everything
-	/// the world creation dialog can change, biome adjustments included.
-	/// </summary>
-	public static class PlanetsmithPresets
+	//// Constants
+	
+	private const string FILE_EXTENSION = ".xml";
+	private const string DOCUMENT_ROOT = "planetsmithPreset";
+	private const string SETTINGS_LABEL = "settings";
+	
+	//// Private Functions
+	
+	private static string PathFor(string name)
 	{
-		private const string FileExtension = ".xml";
-		private const string DocumentRoot = "planetsmithPreset";
-
-		public static string FolderPath
+		return Path.Combine(FolderPath, SanitizeName(name) + FILE_EXTENSION);
+	}
+	
+	//// Public API
+	
+	/// <summary>The folder presets are kept in, created on first use.</summary>
+	public static string FolderPath
+	{
+		get
 		{
-			get
-			{
-				string path = Path.Combine(GenFilePaths.SaveDataFolderPath, "Planetsmith", "Presets");
-				Directory.CreateDirectory(path);
-				return path;
-			}
+			string path = Path.Combine(GenFilePaths.SaveDataFolderPath, "Planetsmith", "Presets");
+			Directory.CreateDirectory(path);
+			return path;
 		}
-
-		/// <summary>Preset names, alphabetically. Empty when none have been saved.</summary>
-		public static List<string> AllNames()
+	}
+	
+	/// <summary>Preset names, alphabetically. Empty when none have been saved.</summary>
+	public static List<string> AllNames()
+	{
+		try
 		{
+			List<string> names = new();
+			foreach (FileInfo file in new DirectoryInfo(FolderPath).GetFiles("*" + FILE_EXTENSION))
+			{
+				names.Add(Path.GetFileNameWithoutExtension(file.Name));
+			}
+			names.Sort();
+			return names;
+		}
+		catch (Exception exception)
+		{
+			Log.Error($"[Planetsmith] Could not list presets: {exception}");
+			return new List<string>();
+		}
+	}
+	
+	public static bool Exists(string name)
+	{
+		return File.Exists(PathFor(name));
+	}
+	
+	public static bool Save(string name, PlanetsmithWorldSettings settings)
+	{
+		// Sanity check
+		if (name.NullOrEmpty())
+		{
+			return false;
+		}
+		
+		// Write a copy to the preset's file
+		try
+		{
+			PlanetsmithWorldSettings copy = settings.Clone();
+			Scribe.saver.InitSaving(PathFor(name), DOCUMENT_ROOT);
 			try
 			{
-				return new DirectoryInfo(FolderPath)
-					.GetFiles("*" + FileExtension)
-					.Select(f => Path.GetFileNameWithoutExtension(f.Name))
-					.OrderBy(n => n)
-					.ToList();
+				Scribe_Deep.Look(ref copy, SETTINGS_LABEL);
 			}
-			catch (Exception e)
+			finally
 			{
-				Log.Error($"[Planetsmith] Could not list presets: {e}");
-				return new List<string>();
+				Scribe.saver.FinalizeSaving();
 			}
+			return true;
 		}
-
-		public static bool Exists(string name)
+		catch (Exception exception)
 		{
-			return File.Exists(PathFor(name));
+			Log.Error($"[Planetsmith] Could not save preset '{name}': {exception}");
+			Scribe.ForceStop();
+			return false;
 		}
-
-		public static bool Save(string name, PlanetsmithWorldSettings settings)
+	}
+	
+	/// <summary>The preset saved under a name, or null when there is none or it cannot be read.</summary>
+	public static PlanetsmithWorldSettings? Load(string name)
+	{
+		// Sanity check
+		string path = PathFor(name);
+		if (!File.Exists(path))
 		{
-			if (name.NullOrEmpty() || settings == null)
-			{
-				return false;
-			}
+			return null;
+		}
+		
+		// Read the preset's file
+		PlanetsmithWorldSettings? loaded = null;
+		try
+		{
+			Scribe.loader.InitLoading(path);
 			try
 			{
-				PlanetsmithWorldSettings copy = settings.Clone();
-				Scribe.saver.InitSaving(PathFor(name), DocumentRoot);
-				try
-				{
-					Scribe_Deep.Look(ref copy, "settings");
-				}
-				finally
-				{
-					Scribe.saver.FinalizeSaving();
-				}
-				return true;
+				Scribe_Deep.Look(ref loaded, SETTINGS_LABEL);
 			}
-			catch (Exception e)
+			finally
 			{
-				Log.Error($"[Planetsmith] Could not save preset '{name}': {e}");
-				Scribe.ForceStop();
-				return false;
+				Scribe.loader.FinalizeLoading();
 			}
 		}
-
-		public static PlanetsmithWorldSettings Load(string name)
+		catch (Exception exception)
+		{
+			Log.Error($"[Planetsmith] Could not load preset '{name}': {exception}");
+			Scribe.ForceStop();
+			return null;
+		}
+		return loaded;
+	}
+	
+	public static bool Delete(string name)
+	{
+		try
 		{
 			string path = PathFor(name);
 			if (!File.Exists(path))
 			{
-				return null;
-			}
-			PlanetsmithWorldSettings loaded = null;
-			try
-			{
-				Scribe.loader.InitLoading(path);
-				try
-				{
-					Scribe_Deep.Look(ref loaded, "settings");
-				}
-				finally
-				{
-					Scribe.loader.FinalizeLoading();
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Error($"[Planetsmith] Could not load preset '{name}': {e}");
-				Scribe.ForceStop();
-				return null;
-			}
-			return loaded;
-		}
-
-		public static bool Delete(string name)
-		{
-			try
-			{
-				string path = PathFor(name);
-				if (!File.Exists(path))
-				{
-					return false;
-				}
-				File.Delete(path);
-				return true;
-			}
-			catch (Exception e)
-			{
-				Log.Error($"[Planetsmith] Could not delete preset '{name}': {e}");
 				return false;
 			}
+			File.Delete(path);
+			return true;
 		}
-
-		/// <summary>Strips anything the filesystem would reject, so any typed name is usable.</summary>
-		public static string SanitizeName(string name)
+		catch (Exception exception)
 		{
-			if (name.NullOrEmpty())
+			Log.Error($"[Planetsmith] Could not delete preset '{name}': {exception}");
+			return false;
+		}
+	}
+	
+	/// <summary>Strips anything the filesystem would reject, so any typed name is usable.</summary>
+	public static string SanitizeName(string name)
+	{
+		// Sanity check
+		if (name.NullOrEmpty())
+		{
+			return string.Empty;
+		}
+		
+		// Keep only the characters a file name can hold
+		char[] invalid = Path.GetInvalidFileNameChars();
+		StringBuilder sanitized = new(name.Length);
+		foreach (char character in name)
+		{
+			if (Array.IndexOf(invalid, character) < 0)
 			{
-				return string.Empty;
+				sanitized.Append(character);
 			}
-			char[] invalid = Path.GetInvalidFileNameChars();
-			var sanitized = name.Where(c => Array.IndexOf(invalid, c) < 0).ToArray();
-			return new string(sanitized).Trim();
 		}
-
-		private static string PathFor(string name)
-		{
-			return Path.Combine(FolderPath, SanitizeName(name) + FileExtension);
-		}
+		return sanitized.ToString().Trim();
 	}
 }
