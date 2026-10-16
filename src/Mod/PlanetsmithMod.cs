@@ -40,21 +40,21 @@ public class PlanetsmithMod : Verse.Mod
 	{
 		if (tilt < 5f)
 		{
-			return "almost no seasons";
+			return "Planetsmith_TiltNoSeasons".Translate();
 		}
 		if (tilt < 18f)
 		{
-			return "mild seasons";
+			return "Planetsmith_TiltMildSeasons".Translate();
 		}
 		if (tilt < 30f)
 		{
-			return "Earth-like";
+			return "Planetsmith_TiltEarthLike".Translate();
 		}
 		if (tilt < 50f)
 		{
-			return "harsh seasons";
+			return "Planetsmith_TiltHarshSeasons".Translate();
 		}
-		return "extreme seasons";
+		return "Planetsmith_TiltExtremeSeasons".Translate();
 	}
 	
 	//// Event Wiring
@@ -68,32 +68,32 @@ public class PlanetsmithMod : Verse.Mod
 		listing.Begin(inRect);
 		listing.Label("Planetsmith");
 		listing.Gap(6f);
-		listing.CheckboxLabeled("Enable climate & biome overhaul", ref settings.isClimateOverhaulEnabled, "When on, Planetsmith recomputes each tile's temperature, rainfall, and biome from its own climate model during world generation. When off, worlds generate as vanilla.");
+		listing.CheckboxLabeled("Planetsmith_EnableOverhaul".Translate(), ref settings.isClimateOverhaulEnabled, "Planetsmith_EnableOverhaulTip".Translate());
 		
 		// Draw the sea level control
 		listing.Gap(12f);
-		listing.CheckboxLabeled("Control sea level", ref settings.isSeaLevelControlEnabled, "When on, Planetsmith raises or lowers sea level during world generation until the planet has the land fraction set below. Leave off to let vanilla, or another mod, decide the coastline.");
+		listing.CheckboxLabeled("Planetsmith_ControlSeaLevel".Translate(), ref settings.isSeaLevelControlEnabled, "Planetsmith_ControlSeaLevelDefaultTip".Translate());
 		if (settings.isSeaLevelControlEnabled)
 		{
-			listing.Label($"Land: {settings.targetLandFraction:P0} of the planet's surface");
+			listing.Label("Planetsmith_LandFraction".Translate(settings.targetLandFraction.ToString("P0")));
 			settings.targetLandFraction = listing.Slider(settings.targetLandFraction, PlanetsmithSettings.MINIMUM_LAND_FRACTION, PlanetsmithSettings.MAXIMUM_LAND_FRACTION);
 		}
 		
 		// Draw the map mode switch
 		listing.Gap(12f);
-		listing.CheckboxLabeled("Show map-mode button on the planet view", ref settings.shouldShowMapModeButton, "Adds a button to the planet view for shading the world by temperature, rainfall and Planetsmith's other climate layers.");
+		listing.CheckboxLabeled("Planetsmith_ShowMapModeButton".Translate(), ref settings.shouldShowMapModeButton, "Planetsmith_ShowMapModeButtonTip".Translate());
 		
 		// Draw the tilt, unless another mod owns it
 		listing.Gap(12f);
 		if (!ModCompatibility.IsAxialTiltOwnedExternally())
 		{
-			listing.Label($"Axial tilt: {settings.axialTilt:F1}°  ({TiltDescription(settings.axialTilt)})");
+			listing.Label("Planetsmith_AxialTilt".Translate(settings.axialTilt.ToString("F1"), TiltDescription(settings.axialTilt)));
 			settings.axialTilt = listing.Slider(settings.axialTilt, 0f, PlanetsmithSettings.MAXIMUM_AXIAL_TILT);
 		}
 		
 		// Point at the per-planet settings
 		listing.Gap(6f);
-		listing.Label("These are the defaults new planets start from. To shape one planet, use the Planetsmith button on the world creation page.");
+		listing.Label("Planetsmith_DefaultsNote".Translate());
 		listing.End();
 	}
 }

@@ -58,9 +58,9 @@ public class Dialog_BiomeSettings : PlanetsmithDialog
 	{
 		GUI.color = new Color(1f, 1f, 1f, 0.55f);
 		float x = rect.x + NAME_WIDTH + COLUMN_GAP;
-		Widgets.Label(new Rect(x, rect.y, VALUE_WIDTH + SLIDER_WIDTH, rect.height), "Frequency");
+		Widgets.Label(new Rect(x, rect.y, VALUE_WIDTH + SLIDER_WIDTH, rect.height), "Planetsmith_BiomeFrequency".Translate());
 		x += VALUE_WIDTH + SLIDER_WIDTH + COLUMN_GAP;
-		Widgets.Label(new Rect(x, rect.y, VALUE_WIDTH + SLIDER_WIDTH, rect.height), "Score offset");
+		Widgets.Label(new Rect(x, rect.y, VALUE_WIDTH + SLIDER_WIDTH, rect.height), "Planetsmith_BiomeScoreOffset".Translate());
 		GUI.color = Color.white;
 	}
 	
@@ -125,11 +125,11 @@ public class Dialog_BiomeSettings : PlanetsmithDialog
 		PlanetsmithWorldSettings world = PlanetsmithWorldParameters.Pending;
 		float y = inRect.y;
 		Text.Font = GameFont.Medium;
-		Widgets.Label(new Rect(inRect.x, y, inRect.width, 36f), "Planetsmith: biomes");
+		Widgets.Label(new Rect(inRect.x, y, inRect.width, 36f), "Planetsmith_BiomesTitle".Translate());
 		Text.Font = GameFont.Small;
 		y += 40f;
 		// Two lines tall: this sentence wraps at the dialog's width.
-		Widgets.Label(new Rect(inRect.x, y, inRect.width, 52f), "Turn a biome off to keep it off this planet. Frequency scales how much ground it takes where the climate already suits it; offset nudges it into or out of places it narrowly loses or wins.");
+		Widgets.Label(new Rect(inRect.x, y, inRect.width, 52f), "Planetsmith_BiomesIntro".Translate());
 		y += 62f;
 		
 		// Draw the column headings
@@ -150,7 +150,7 @@ public class Dialog_BiomeSettings : PlanetsmithDialog
 		
 		// Draw the reset button
 		Rect resetRect = new(inRect.x, inRect.yMax - 32f, 200f, 30f);
-		if (Widgets.ButtonText(resetRect, "Reset all biomes"))
+		if (Widgets.ButtonText(resetRect, "Planetsmith_ResetAllBiomes".Translate()))
 		{
 			world.ResetAllBiomes();
 		}

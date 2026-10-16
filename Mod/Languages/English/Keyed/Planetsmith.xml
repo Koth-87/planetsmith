@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+	
+	<!-- Mod settings -->
+	<Planetsmith_EnableOverhaul>Enable climate &amp; biome overhaul</Planetsmith_EnableOverhaul>
+	<Planetsmith_EnableOverhaulTip>When on, Planetsmith recomputes each tile's temperature, rainfall, and biome from its own climate model during world generation. When off, worlds generate as vanilla.</Planetsmith_EnableOverhaulTip>
+	<Planetsmith_ControlSeaLevelDefaultTip>When on, Planetsmith raises or lowers sea level during world generation until the planet has the land fraction set below. Leave off to let vanilla, or another mod, decide the coastline.</Planetsmith_ControlSeaLevelDefaultTip>
+	<Planetsmith_ShowMapModeButton>Show map-mode button on the planet view</Planetsmith_ShowMapModeButton>
+	<Planetsmith_ShowMapModeButtonTip>Adds a button to the planet view for shading the world by temperature, rainfall and Planetsmith's other climate layers.</Planetsmith_ShowMapModeButtonTip>
+	<Planetsmith_DefaultsNote>These are the defaults new planets start from. To shape one planet, use the Planetsmith button on the world creation page.</Planetsmith_DefaultsNote>
+	
+	<!-- Shared by the mod settings and the planet parameters -->
+	<Planetsmith_ControlSeaLevel>Control sea level</Planetsmith_ControlSeaLevel>
+	<Planetsmith_LandFraction>Land: {0} of the planet's surface</Planetsmith_LandFraction>
+	<Planetsmith_AxialTilt>Axial tilt: {0}°  ({1})</Planetsmith_AxialTilt>
+	<Planetsmith_TiltNoSeasons>almost no seasons</Planetsmith_TiltNoSeasons>
+	<Planetsmith_TiltMildSeasons>mild seasons</Planetsmith_TiltMildSeasons>
+	<Planetsmith_TiltEarthLike>Earth-like</Planetsmith_TiltEarthLike>
+	<Planetsmith_TiltHarshSeasons>harsh seasons</Planetsmith_TiltHarshSeasons>
+	<Planetsmith_TiltExtremeSeasons>extreme seasons</Planetsmith_TiltExtremeSeasons>
+	
+	<!-- World creation page and planet parameters -->
+	<Planetsmith_OpenWorldParameters>Planetsmith...</Planetsmith_OpenWorldParameters>
+	<Planetsmith_WorldParametersTitle>Planetsmith: planet parameters</Planetsmith_WorldParametersTitle>
+	<Planetsmith_WorldParametersIntro>These apply to the world you are about to generate.</Planetsmith_WorldParametersIntro>
+	<Planetsmith_ControlSeaLevelTip>When on, Planetsmith raises or lowers sea level until the planet has the land fraction set below. Leave off to let vanilla, or another mod, decide the coastline.</Planetsmith_ControlSeaLevelTip>
+	<Planetsmith_SeaLevelRivalNote>{0} also sets sea level. Planetsmith runs afterwards, so this setting wins; turn it off to leave the coastline to {0}.</Planetsmith_SeaLevelRivalNote>
+	<Planetsmith_AxialTiltExternal>Axial tilt: set by Realistic Axial Tilt</Planetsmith_AxialTiltExternal>
+	<Planetsmith_AxialTiltExternalNote>Realistic Axial Tilt is installed, so the tilt slider on the world creation page sets it for both mods. Planetsmith builds the biomes around the temperatures it works out, so what you generate matches what you play.</Planetsmith_AxialTiltExternalNote>
+	<Planetsmith_AxialTiltExplanation>Tilt is why a planet has seasons. Upright worlds barely change through the year; steeply tilted ones swing between harsh summers and winters.</Planetsmith_AxialTiltExplanation>
+	<Planetsmith_WorldbuilderTiltNote>Worldbuilder has its own axial tilt, which sets how far temperatures swing through the year once you are playing. This one decides how the seasons shape the planet's biomes while it is generated. They are separate, so set both the same way if you want the world to match how it plays.</Planetsmith_WorldbuilderTiltNote>
+	<Planetsmith_OpenClimateTuning>Climate tuning...</Planetsmith_OpenClimateTuning>
+	<Planetsmith_OpenClimateTuningAdjusted>Climate tuning (adjusted)...</Planetsmith_OpenClimateTuningAdjusted>
+	<Planetsmith_OpenBiomes>Biomes...</Planetsmith_OpenBiomes>
+	<Planetsmith_OpenBiomesAdjusted>Biomes (adjusted)...</Planetsmith_OpenBiomesAdjusted>
+	<Planetsmith_WorldbuilderBiomesNote>Worldbuilder's own biome menu offers the same two controls, and both are applied, so you can use either. This one leaves out sea, lake and ice, which have no dry-land alternative and would leave a planet unable to draw if they were turned off.</Planetsmith_WorldbuilderBiomesNote>
+	<Planetsmith_OpenPresets>Presets...</Planetsmith_OpenPresets>
+	<Planetsmith_ResetToModDefaults>Reset to mod defaults</Planetsmith_ResetToModDefaults>
+	
+	<!-- Climate tuning -->
+	<Planetsmith_ClimateTuningTitle>Planetsmith: climate tuning</Planetsmith_ClimateTuningTitle>
+	<Planetsmith_ClimateTuningIntro>These adjust the simulation for the world you are about to generate. Left at their defaults they change nothing.</Planetsmith_ClimateTuningIntro>
+	<Planetsmith_GlobalTemperature>Global temperature</Planetsmith_GlobalTemperature>
+	<Planetsmith_GlobalTemperatureTip>Warms or cools the whole planet before anything else is worked out.</Planetsmith_GlobalTemperatureTip>
+	<Planetsmith_TemperatureUnit>C</Planetsmith_TemperatureUnit>
+	<Planetsmith_ElevationCooling>Cooling with altitude</Planetsmith_ElevationCooling>
+	<Planetsmith_ElevationCoolingTip>How much colder high ground becomes. Higher values put snow on smaller mountains.</Planetsmith_ElevationCoolingTip>
+	<Planetsmith_RainfallScale>Overall rainfall</Planetsmith_RainfallScale>
+	<Planetsmith_RainfallScaleTip>Scales the rain falling everywhere, before mountains, coasts and monsoons have their say.</Planetsmith_RainfallScaleTip>
+	<Planetsmith_RainShadow>Rain shadows</Planetsmith_RainShadow>
+	<Planetsmith_RainShadowTip>How thoroughly mountains wring out the air crossing them. Air stripped harder stays dry further inland, so this sets how far a shadow reaches as well as how dry it is.</Planetsmith_RainShadowTip>
+	<Planetsmith_MoistureReach>Moisture reach inland</Planetsmith_MoistureReach>
+	<Planetsmith_MoistureReachTip>How far sea air carries its water before running dry. Higher values green the interiors.</Planetsmith_MoistureReachTip>
+	<Planetsmith_MonsoonStrength>Monsoon strength</Planetsmith_MonsoonStrength>
+	<Planetsmith_MonsoonStrengthTip>How heavy the seasonal rains are on tropical coasts.</Planetsmith_MonsoonStrengthTip>
+	<Planetsmith_SeasonIntensity>Season intensity</Planetsmith_SeasonIntensity>
+	<Planetsmith_SeasonIntensityTip>How far temperatures swing between summer and winter, which decides where frost-shy biomes can live.</Planetsmith_SeasonIntensityTip>
+	<Planetsmith_CoastalInfluence>Coastal influence</Planetsmith_CoastalInfluence>
+	<Planetsmith_CoastalInfluenceTip>How strongly the sea tempers the coasts beside it, mild where the wind comes off the water and cold and dry where it does not.</Planetsmith_CoastalInfluenceTip>
+	<Planetsmith_TuningAtDefaults>Defaults</Planetsmith_TuningAtDefaults>
+	<Planetsmith_ResetTuning>Reset to defaults</Planetsmith_ResetTuning>
+	
+	<!-- Biomes -->
+	<Planetsmith_BiomesTitle>Planetsmith: biomes</Planetsmith_BiomesTitle>
+	<Planetsmith_BiomesIntro>Turn a biome off to keep it off this planet. Frequency scales how much ground it takes where the climate already suits it; offset nudges it into or out of places it narrowly loses or wins.</Planetsmith_BiomesIntro>
+	<Planetsmith_BiomeFrequency>Frequency</Planetsmith_BiomeFrequency>
+	<Planetsmith_BiomeScoreOffset>Score offset</Planetsmith_BiomeScoreOffset>
+	<Planetsmith_ResetAllBiomes>Reset all biomes</Planetsmith_ResetAllBiomes>
+	
+	<!-- Presets -->
+	<Planetsmith_PresetsTitle>Planetsmith: presets</Planetsmith_PresetsTitle>
+	<Planetsmith_SavePreset>Save</Planetsmith_SavePreset>
+	<Planetsmith_OverwritePreset>Overwrite</Planetsmith_OverwritePreset>
+	<Planetsmith_LoadPreset>Load</Planetsmith_LoadPreset>
+	<Planetsmith_DeletePreset>Delete</Planetsmith_DeletePreset>
+	<Planetsmith_NoPresets>No presets saved yet.</Planetsmith_NoPresets>
+	<Planetsmith_PresetSaved>Saved preset '{0}'.</Planetsmith_PresetSaved>
+	<Planetsmith_PresetLoaded>Loaded preset '{0}'.</Planetsmith_PresetLoaded>
+	<Planetsmith_PresetLoadFailed>Could not load preset '{0}'.</Planetsmith_PresetLoadFailed>
+	<Planetsmith_ConfirmDeletePreset>Delete the preset '{0}'?</Planetsmith_ConfirmDeletePreset>
+	
+	<!-- Map modes -->
+	<Planetsmith_MapModesButton>Planetsmith\nMap modes</Planetsmith_MapModesButton>
+	<Planetsmith_MapModeButton>Map mode:\n{0}</Planetsmith_MapModeButton>
+	<Planetsmith_MapModesTip>Shade the planet by the climate Planetsmith generated for it.</Planetsmith_MapModesTip>
+	<Planetsmith_MapModeNeedsRegeneration>{0} (regenerate to view)</Planetsmith_MapModeNeedsRegeneration>
+	<Planetsmith_MapModeOff>Off</Planetsmith_MapModeOff>
+	<Planetsmith_MapModeTemperature>Temperature</Planetsmith_MapModeTemperature>
+	<Planetsmith_MapModeRainfall>Rainfall</Planetsmith_MapModeRainfall>
+	<Planetsmith_MapModeSwampiness>Wetlands</Planetsmith_MapModeSwampiness>
+	<Planetsmith_MapModeContinentality>Distance from sea</Planetsmith_MapModeContinentality>
+	<Planetsmith_MapModeWinterTemperature>Winter temperature</Planetsmith_MapModeWinterTemperature>
+	<Planetsmith_MapModeOceanCurrents>Coastal currents</Planetsmith_MapModeOceanCurrents>
+	<Planetsmith_MapModeAridity>Effective moisture</Planetsmith_MapModeAridity>
+	<Planetsmith_MapModeMonsoon>Monsoon</Planetsmith_MapModeMonsoon>
+	<Planetsmith_MapModeDrainage>Water flow</Planetsmith_MapModeDrainage>
+	<Planetsmith_MapModeRainShadow>Rain shadow</Planetsmith_MapModeRainShadow>
+	
+</LanguageData>

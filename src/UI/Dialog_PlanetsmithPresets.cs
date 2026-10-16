@@ -45,7 +45,7 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 		}
 		
 		// Confirm and clear the name
-		Messages.Message($"Saved preset '{name}'.", MessageTypeDefOf.TaskCompletion, historical: false);
+		Messages.Message("Planetsmith_PresetSaved".Translate(name), MessageTypeDefOf.TaskCompletion, historical: false);
 		nameBuffer = string.Empty;
 		RefreshPresets();
 	}
@@ -56,13 +56,13 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 		PlanetsmithWorldSettings? loaded = PlanetsmithPresets.Load(name);
 		if (loaded == null)
 		{
-			Messages.Message($"Could not load preset '{name}'.", MessageTypeDefOf.RejectInput, historical: false);
+			Messages.Message("Planetsmith_PresetLoadFailed".Translate(name), MessageTypeDefOf.RejectInput, historical: false);
 			return;
 		}
 		
 		// Make it the planet being edited
 		PlanetsmithWorldParameters.Pending = loaded;
-		Messages.Message($"Loaded preset '{name}'.", MessageTypeDefOf.TaskCompletion, historical: false);
+		Messages.Message("Planetsmith_PresetLoaded".Translate(name), MessageTypeDefOf.TaskCompletion, historical: false);
 	}
 	
 	/// <summary>Asks before deleting a preset, since there is no undo.</summary>
@@ -74,7 +74,7 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 			RefreshPresets();
 		}
 		
-		Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation($"Delete the preset '{name}'?", OnDeleteConfirmed, destructive: true));
+		Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation("Planetsmith_ConfirmDeletePreset".Translate(name), OnDeleteConfirmed, destructive: true));
 	}
 	
 	//// Event Wiring
@@ -90,7 +90,7 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 		// Draw the title
 		float y = inRect.y;
 		Text.Font = GameFont.Medium;
-		Widgets.Label(new Rect(inRect.x, y, inRect.width, 36f), "Planetsmith: presets");
+		Widgets.Label(new Rect(inRect.x, y, inRect.width, 36f), "Planetsmith_PresetsTitle".Translate());
 		Text.Font = GameFont.Small;
 		y += 44f;
 		
@@ -104,7 +104,7 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 		{
 			GUI.color = new Color(1f, 1f, 1f, 0.4f);
 		}
-		if (Widgets.ButtonText(saveRect, PlanetsmithPresets.Exists(trimmed) ? "Overwrite" : "Save") && canSave)
+		if (Widgets.ButtonText(saveRect, (PlanetsmithPresets.Exists(trimmed) ? "Planetsmith_OverwritePreset" : "Planetsmith_SavePreset").Translate()) && canSave)
 		{
 			SavePreset(trimmed);
 		}
@@ -117,7 +117,7 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 		if (presets.Count == 0)
 		{
 			GUI.color = new Color(1f, 1f, 1f, 0.5f);
-			Widgets.Label(new Rect(inRect.x, y, inRect.width, 30f), "No presets saved yet.");
+			Widgets.Label(new Rect(inRect.x, y, inRect.width, 30f), "Planetsmith_NoPresets".Translate());
 			GUI.color = Color.white;
 			return;
 		}
@@ -136,11 +136,11 @@ public class Dialog_PlanetsmithPresets : PlanetsmithDialog
 				Widgets.DrawHighlight(rowRect);
 			}
 			Widgets.Label(new Rect(rowRect.x, rowRect.y + 5f, rowRect.width - 190f, 26f), preset);
-			if (Widgets.ButtonText(new Rect(rowRect.xMax - 185f, rowRect.y + 2f, 90f, 28f), "Load"))
+			if (Widgets.ButtonText(new Rect(rowRect.xMax - 185f, rowRect.y + 2f, 90f, 28f), "Planetsmith_LoadPreset".Translate()))
 			{
 				LoadPreset(preset);
 			}
-			if (Widgets.ButtonText(new Rect(rowRect.xMax - 90f, rowRect.y + 2f, 90f, 28f), "Delete"))
+			if (Widgets.ButtonText(new Rect(rowRect.xMax - 90f, rowRect.y + 2f, 90f, 28f), "Planetsmith_DeletePreset".Translate()))
 			{
 				toDelete = preset;
 			}

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Translation support: every menu, tooltip and message now reads its text from a language file
+
 ## [1.2.1] - 2026-08-04
 
 ### Changed

@@ -193,17 +193,17 @@ public static class PlanetsmithOverlay
 	{
 		switch (mode)
 		{
-			case OverlayMode.Temperature: return "Temperature";
-			case OverlayMode.Rainfall: return "Rainfall";
-			case OverlayMode.Swampiness: return "Wetlands";
-			case OverlayMode.Continentality: return "Distance from sea";
-			case OverlayMode.WinterTemperature: return "Winter temperature";
-			case OverlayMode.OceanCurrents: return "Coastal currents";
-			case OverlayMode.Aridity: return "Effective moisture";
-			case OverlayMode.Monsoon: return "Monsoon";
-			case OverlayMode.Drainage: return "Water flow";
-			case OverlayMode.RainShadow: return "Rain shadow";
-			default: return "Off";
+			case OverlayMode.Temperature: return "Planetsmith_MapModeTemperature".Translate();
+			case OverlayMode.Rainfall: return "Planetsmith_MapModeRainfall".Translate();
+			case OverlayMode.Swampiness: return "Planetsmith_MapModeSwampiness".Translate();
+			case OverlayMode.Continentality: return "Planetsmith_MapModeContinentality".Translate();
+			case OverlayMode.WinterTemperature: return "Planetsmith_MapModeWinterTemperature".Translate();
+			case OverlayMode.OceanCurrents: return "Planetsmith_MapModeOceanCurrents".Translate();
+			case OverlayMode.Aridity: return "Planetsmith_MapModeAridity".Translate();
+			case OverlayMode.Monsoon: return "Planetsmith_MapModeMonsoon".Translate();
+			case OverlayMode.Drainage: return "Planetsmith_MapModeDrainage".Translate();
+			case OverlayMode.RainShadow: return "Planetsmith_MapModeRainShadow".Translate();
+			default: return "Planetsmith_MapModeOff".Translate();
 		}
 	}
 	

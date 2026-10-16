@@ -30,18 +30,16 @@ public static class PlanetsmithMapModeBar
 	private const float EDGE_MARGIN = 10f;
 	private const float TOP_OFFSET = 200f;
 	
-	/// <summary>
-	/// Every mode, listed alphabetically by the name the player sees. Sorted once at
-	/// startup rather than written out in order, so a mode added later cannot end up
-	/// out of place. Off stays pinned at the top: it turns the shading off rather than
-	/// being a view of its own, and sorting it into the middle of the list would hide
-	/// it among them.
-	/// </summary>
-	private static readonly OverlayMode[] MODE_ORDER = BuildModeOrder();
-	
 	//// Private Functions
 	
-	private static OverlayMode[] BuildModeOrder()
+	/// <summary>
+	/// Every mode, listed alphabetically by the name the player sees. Sorted each time
+	/// the menu opens rather than written out in order, so a mode added later cannot
+	/// end up out of place and the order follows whichever language is being played.
+	/// Off stays pinned at the top: it turns the shading off rather than being a view
+	/// of its own, and sorting it into the middle of the list would hide it among them.
+	/// </summary>
+	private static List<OverlayMode> BuildModeOrder()
 	{
 		// Gather every mode but Off
 		// Enum.GetValues predates generics and hands each value back boxed, so the loop
@@ -58,7 +56,7 @@ public static class PlanetsmithMapModeBar
 		// Sort them by name, with Off on top
 		modes.Sort(CompareByLabel);
 		modes.Insert(0, OverlayMode.None);
-		return modes.ToArray();
+		return modes;
 	}
 	
 	private static int CompareByLabel(OverlayMode first, OverlayMode second)
@@ -70,14 +68,14 @@ public static class PlanetsmithMapModeBar
 	{
 		List<FloatMenuOption> options = new();
 		bool hasData = PlanetsmithClimateCache.IsValid;
-		foreach (OverlayMode mode in MODE_ORDER)
+		foreach (OverlayMode mode in BuildModeOrder())
 		{
 			// These layers are worked out while a world is generated and are not kept in
 			// the save, so after a reload there is nothing to show.
 			string label = PlanetsmithOverlay.Label(mode);
 			if (PlanetsmithOverlay.IsBuiltDuringGeneration(mode) && !hasData)
 			{
-				options.Add(new FloatMenuOption(label + " (regenerate to view)", null));
+				options.Add(new FloatMenuOption("Planetsmith_MapModeNeedsRegeneration".Translate(label), null));
 				continue;
 			}
 			options.Add(CreateModeOption(mode, label));
@@ -122,12 +120,12 @@ public static class PlanetsmithMapModeBar
 		}
 		
 		// Draw the button
-		string label = current == OverlayMode.None ? "Planetsmith\nMap modes" : "Map mode:\n" + PlanetsmithOverlay.Label(current);
+		string label = current == OverlayMode.None ? "Planetsmith_MapModesButton".Translate() : "Planetsmith_MapModeButton".Translate(PlanetsmithOverlay.Label(current));
 		Rect rect = new(EDGE_MARGIN, TOP_OFFSET, BUTTON_WIDTH, BUTTON_HEIGHT);
 		if (Widgets.ButtonText(rect, label))
 		{
 			Find.WindowStack.Add(new FloatMenu(BuildMenuOptions()));
 		}
-		TooltipHandler.TipRegion(rect, "Shade the planet by the climate Planetsmith generated for it.");
+		TooltipHandler.TipRegion(rect, "Planetsmith_MapModesTip".Translate());
 	}
 }

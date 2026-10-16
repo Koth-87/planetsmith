@@ -57,25 +57,25 @@ public class Dialog_ClimateTuning : PlanetsmithDialog
 		Listing_Standard listing = new();
 		listing.Begin(inRect);
 		Text.Font = GameFont.Medium;
-		listing.Label("Planetsmith: climate tuning");
+		listing.Label("Planetsmith_ClimateTuningTitle".Translate());
 		Text.Font = GameFont.Small;
 		listing.Gap(4f);
-		listing.Label("These adjust the simulation for the world you are about to generate. Left at their defaults they change nothing.");
+		listing.Label("Planetsmith_ClimateTuningIntro".Translate());
 		listing.GapLine(10f);
 		
 		// Draw a slider per dial
-		DrawOffsetSlider(listing, "Global temperature", ref tuning.temperatureOffset, -TEMPERATURE_OFFSET_RANGE, TEMPERATURE_OFFSET_RANGE, "C", "Warms or cools the whole planet before anything else is worked out.");
-		DrawFactorSlider(listing, "Cooling with altitude", ref tuning.elevationCooling, "How much colder high ground becomes. Higher values put snow on smaller mountains.");
-		DrawFactorSlider(listing, "Overall rainfall", ref tuning.rainfallScale, "Scales the rain falling everywhere, before mountains, coasts and monsoons have their say.");
-		DrawFactorSlider(listing, "Rain shadows", ref tuning.rainShadow, "How thoroughly mountains wring out the air crossing them. Air stripped harder stays dry further inland, so this sets how far a shadow reaches as well as how dry it is.");
-		DrawFactorSlider(listing, "Moisture reach inland", ref tuning.moistureReach, "How far sea air carries its water before running dry. Higher values green the interiors.");
-		DrawFactorSlider(listing, "Monsoon strength", ref tuning.monsoonStrength, "How heavy the seasonal rains are on tropical coasts.");
-		DrawFactorSlider(listing, "Season intensity", ref tuning.seasonIntensity, "How far temperatures swing between summer and winter, which decides where frost-shy biomes can live.");
-		DrawFactorSlider(listing, "Coastal influence", ref tuning.coastalInfluence, "How strongly the sea tempers the coasts beside it, mild where the wind comes off the water and cold and dry where it does not.");
+		DrawOffsetSlider(listing, "Planetsmith_GlobalTemperature".Translate(), ref tuning.temperatureOffset, -TEMPERATURE_OFFSET_RANGE, TEMPERATURE_OFFSET_RANGE, "Planetsmith_TemperatureUnit".Translate(), "Planetsmith_GlobalTemperatureTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_ElevationCooling".Translate(), ref tuning.elevationCooling, "Planetsmith_ElevationCoolingTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_RainfallScale".Translate(), ref tuning.rainfallScale, "Planetsmith_RainfallScaleTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_RainShadow".Translate(), ref tuning.rainShadow, "Planetsmith_RainShadowTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_MoistureReach".Translate(), ref tuning.moistureReach, "Planetsmith_MoistureReachTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_MonsoonStrength".Translate(), ref tuning.monsoonStrength, "Planetsmith_MonsoonStrengthTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_SeasonIntensity".Translate(), ref tuning.seasonIntensity, "Planetsmith_SeasonIntensityTip".Translate());
+		DrawFactorSlider(listing, "Planetsmith_CoastalInfluence".Translate(), ref tuning.coastalInfluence, "Planetsmith_CoastalInfluenceTip".Translate());
 		
 		// Draw the reset button
 		listing.Gap(10f);
-		if (listing.ButtonText(tuning.IsDefault ? "Defaults" : "Reset to defaults"))
+		if (listing.ButtonText((tuning.IsDefault ? "Planetsmith_TuningAtDefaults" : "Planetsmith_ResetTuning").Translate()))
 		{
 			tuning.Reset();
 		}

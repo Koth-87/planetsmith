@@ -38,7 +38,7 @@ public static class Patch_Page_CreateWorldParams
 	public static void OnWindowContentsDrawn(Rect rect)
 	{
 		Rect buttonRect = new(rect.x + BUTTON_WIDTH + BUTTON_GAP, rect.y + rect.height - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
-		if (Widgets.ButtonText(buttonRect, "Planetsmith..."))
+		if (Widgets.ButtonText(buttonRect, "Planetsmith_OpenWorldParameters".Translate()))
 		{
 			Find.WindowStack.Add(new Dialog_PlanetsmithWorldParameters());
 		}
