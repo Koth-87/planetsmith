@@ -1,5 +1,19 @@
-# Planetsmith
-- - -
+# <p align=center style="text-align: center;"> Planetsmith </p>
+
+<p align="center" style="text-align: center;">
+	<img alt="Version" src="https://img.shields.io/badge/Version-1.2.1-orange">
+	<img alt="Available for" src="https://img.shields.io/badge/Available_for-1.6-blue">
+	<img alt="License" src="https://img.shields.io/badge/License-GPL--3.0--or--later-red">
+</p>
+
+<p align="center" style="text-align: center;">
+	<a alt="Buy Me a Coffee" href="https://buymeacoffee.com/aspctt"><img alt="Buy Me a Coffee" height="40" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/donate/buymeacoffee-singular_vector.svg"></a>
+</p>
+
+<p align="center" style="text-align: center;">
+	<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3773634615"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/available/steam_vector.svg" alt="Available on the Steam Workshop"></a>
+	<a href="https://github.com/aspctt/planetsmith"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/available/github_vector.svg" alt="Available on GitHub"></a>
+</p>
 
 ## Description
 
@@ -37,7 +51,7 @@ Planetsmith scores biomes through their own workers, so biomes from other mods a
 
 ## Installation
 
-To install, place the `Planetsmith` folder inside your RimWorld `Mods` folder (e.g. `.../steamapps/common/RimWorld/Mods/Planetsmith`), then enable it in the in-game mod list below its dependencies.
+Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3773634615), or place the `planetsmith` folder from the release zip inside your RimWorld `Mods` folder (e.g. `.../steamapps/common/RimWorld/Mods/planetsmith`), then enable it in the in-game mod list below its dependencies.
 
 **REMOVE ANY OLD VERSIONS BEFORE INSTALLING.**
 
