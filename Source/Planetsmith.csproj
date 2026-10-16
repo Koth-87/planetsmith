@@ -25,7 +25,7 @@
 	-->
 	<PropertyGroup>
 		<RimWorldManagedDir Condition="'$(RimWorldManagedDir)' == ''">S:\SteamLibrary\steamapps\common\RimWorld\RimWorldWin64_Data\Managed</RimWorldManagedDir>
-		<HarmonyDir Condition="'$(HarmonyDir)' == ''">S:\SteamLibrary\steamapps\workshop\content\294100\2009463077\Current\Assemblies</HarmonyDir>
+		<HarmonyDir Condition="'$(HarmonyDir)' == ''">S:\SteamLibrary\steamapps\workshop\content\294100\2009463077\1.6\Assemblies</HarmonyDir>
 	</PropertyGroup>
 
 	<ItemGroup>
