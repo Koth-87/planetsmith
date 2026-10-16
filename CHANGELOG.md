@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Translation support: every menu, tooltip and message now reads its text from a language file
+- The log lists the most common biomes in each band of latitude, next to the rainfall report
 
 ### Fixed
 

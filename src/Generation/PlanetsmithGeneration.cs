@@ -105,6 +105,7 @@ public static class PlanetsmithGeneration
 		
 		// Report the climate and keep it for the overlays
 		ClimateReport.LogSummary(context);
+		ClimateReport.LogBiomes(context);
 		PlanetsmithClimateCache.Store(context);
 	}
 }
