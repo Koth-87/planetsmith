@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
 using Verse;
@@ -104,7 +105,14 @@ public static class PlanetsmithMapModeBar
 		{
 			return;
 		}
-		if (!WorldRendererUtility.WorldRendered)
+		// The game also counts the planet as rendered while it sits behind a map in orbit as
+		// a backdrop. The shading only ever draws on the surface while the planet view is
+		// open, so the button stays hidden everywhere else.
+		if (!WorldRendererUtility.WorldSelected)
+		{
+			return;
+		}
+		if (PlanetLayer.Selected.Def != PlanetLayerDefOf.Surface)
 		{
 			return;
 		}
