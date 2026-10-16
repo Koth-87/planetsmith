@@ -1,6 +1,16 @@
 ###############################################################################
-# Worldsmith - .gitignore for a C# / .NET RimWorld (Harmony) mod
+# Planetsmith - .gitignore for a C# / .NET RimWorld (Harmony) mod
 ###############################################################################
+
+## Release archives
+# Built by zipping the Mod folder for a release. Regenerated on demand, so there
+# is no reason to carry them in history where they would bloat every clone.
+*.zip
+*.7z
+*.rar
+Release/
+Releases/
+build/
 
 ## .NET build intermediates and output
 [Bb]in/
@@ -8,8 +18,8 @@
 *.binlog
 msbuild*.log
 
-# The compiled mod assembly lives in Assemblies/ and ships with the mod, so it
-# is intentionally TRACKED (the .csproj OutputPath points there). Reference
+# The compiled mod assembly lives in Mod/1.6/Assemblies/ and ships with the mod,
+# so it is intentionally TRACKED (the .csproj OutputPath points there). Reference
 # DLLs are not copied in (Private=false), so nothing else lands there.
 
 ## Debug symbols (DebugType=none by default, so normally none are produced)
@@ -38,12 +48,8 @@ desktop.ini
 ###############################################################################
 # Local-only reference material. NOT for publication.
 #
-# These hold third-party and decompiled code / binaries that must not be
-# redistributed with this GPL mod. They are kept locally for reference and are
-# never committed. Remove an entry only if you deliberately intend to publish it.
+# Holds bug reports, test logs, art sources, and third-party and decompiled
+# code / binaries that must not be redistributed with this GPL mod. Kept locally
+# for reference and never committed.
 ###############################################################################
-context-files/
-bug-reports/
-other-mods/
-photoshop/
-NOTES.md
+external-files/
