@@ -58,16 +58,25 @@ public sealed class BiomePass : IGenerationPass
 	// A biome that only accepts rainfall up to this is treated as belonging to dry
 	// country. Set above the semi-arid scrub band (which tolerates up to 2000mm), or
 	// scrub escapes the gate and takes over every warm region, since its score rises
-	// with temperature faster than forest's does. Odyssey's grasslands, which stop at
-	// 2500mm and read as 2000 on the probe's steps, did exactly that at 1600: they took
-	// most of the humid equator, soaked ground included, and left rainforest a fifth.
-	private const float DRY_BIOME_RAINFALL_LIMIT = 2000f;
+	// with temperature faster than forest's does.
+	private const float DRY_BIOME_RAINFALL_LIMIT = 1600f;
 	
 	// Effective moisture above which land is no longer meaningfully water limited.
 	private const float HUMID_ARIDITY_INDEX = 0.65f;
 	
 	// Score lost per unit of effective moisture beyond that, for dry-country biomes.
 	private const float ARIDITY_PENALTY_PER_UNIT = 25f;
+	
+	// A biome that accepts more rain than dry country but still stops short, up to this
+	// on the probe's steps, is treated as sub-humid: savanna and grassland. Those give
+	// way to forest where the rain matches what the heat evaporates, not where semi-arid
+	// ground ends, and the penalty is steep so rainforest takes the soaked ground.
+	// Odyssey's grasslands, which stop at 2500mm and read as 2000 on the probe, otherwise
+	// took most of the equator, soaked ground included. Treating them as dry country
+	// overshot: they lost the drier tropics too, and temperate forest took them.
+	private const float SUBHUMID_BIOME_RAINFALL_LIMIT = 2000f;
+	private const float SUBHUMID_ARIDITY_INDEX = 1f;
+	private const float SUBHUMID_PENALTY_PER_UNIT = 60f;
 	
 	// Worldbuilder stores a biome's frequency in tenths, so ten is a biome left alone.
 	private const float WORLDBUILDER_FREQUENCY_SCALE = 10f;
@@ -244,7 +253,8 @@ public sealed class BiomePass : IGenerationPass
 	/// Vanilla decides deserts on rainfall alone, so a chilly place with little rain
 	/// looks like a desert to it, when in truth almost nothing evaporates there and
 	/// the ground stays damp. Comparing effective moisture instead keeps deserts in
-	/// country that is genuinely parched.
+	/// country that is genuinely parched. Sub-humid biomes such as grassland are held
+	/// back the same way, but only from ground humid enough for forest.
 	/// </summary>
 	private static float ApplyAridityGate(BiomeDef biome, float score, float aridityIndex)
 	{
@@ -260,13 +270,22 @@ public sealed class BiomePass : IGenerationPass
 			return score; // genuinely dry ground; the biome is welcome to it
 		}
 		float wetLimit = BiomeProfiler.WetLimit(biome);
-		if (wetLimit > DRY_BIOME_RAINFALL_LIMIT)
+		if (wetLimit > SUBHUMID_BIOME_RAINFALL_LIMIT)
 		{
-			return score; // not a dry-country biome
+			return score; // takes any amount of rain
 		}
 		
-		// Penalise how far past humid the ground is
-		return score - ARIDITY_PENALTY_PER_UNIT * (aridityIndex - HUMID_ARIDITY_INDEX);
+		// Pick where the biome gives way
+		bool isDryCountry = wetLimit <= DRY_BIOME_RAINFALL_LIMIT;
+		float threshold = isDryCountry ? HUMID_ARIDITY_INDEX : SUBHUMID_ARIDITY_INDEX;
+		float penaltyPerUnit = isDryCountry ? ARIDITY_PENALTY_PER_UNIT : SUBHUMID_PENALTY_PER_UNIT;
+		if (aridityIndex <= threshold)
+		{
+			return score;
+		}
+		
+		// Penalise how far past it the ground is
+		return score - penaltyPerUnit * (aridityIndex - threshold);
 	}
 	
 	/// <summary>
