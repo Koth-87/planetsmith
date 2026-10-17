@@ -20,9 +20,18 @@ public sealed class SwampinessPass : IGenerationPass
 {
 	//// Constants
 	
-	// Rainfall (mm) below which no wetland forms, and where rainfall stops helping.
-	private const float MINIMUM_WETLAND_RAINFALL = 500f;
-	private const float FULL_WETLAND_RAINFALL = 1600f;
+	// Effective moisture below which no wetland forms, and where more stops helping. Read
+	// from moisture rather than rainfall because a wetland is water the climate cannot
+	// evaporate away. On rainfall alone a swamp needed over 1000mm, which only the wet
+	// tropics reach, so temperate swamps grew in equatorial inlands and almost nowhere
+	// temperate, while cool lowlands that hardly evaporate anything never got their bogs.
+	private const float MINIMUM_WETLAND_ARIDITY_INDEX = 0.5f;
+	private const float FULL_WETLAND_ARIDITY_INDEX = 1.5f;
+	
+	// Rainfall (mm) over which ground goes from too little water to pool at all to
+	// enough. Keeps polar deserts dry, where almost nothing evaporates either.
+	private const float MINIMUM_WETLAND_RAINFALL = 200f;
+	private const float FULL_WETLAND_RAINFALL = 400f;
 	
 	// Metres a tile must sit below its neighbours to count as a full basin.
 	private const float BASIN_DEPTH_SCALE = 150f;
@@ -106,9 +115,11 @@ public sealed class SwampinessPass : IGenerationPass
 			}
 			
 			// Rule out dry or steep ground
-			float rainFactor = Mathf.Clamp01((tile.rainfall - MINIMUM_WETLAND_RAINFALL) / (FULL_WETLAND_RAINFALL - MINIMUM_WETLAND_RAINFALL));
+			float moistureFactor = Mathf.InverseLerp(MINIMUM_WETLAND_ARIDITY_INDEX, FULL_WETLAND_ARIDITY_INDEX, context.AridityIndex[tileId]);
+			float waterFactor = Mathf.InverseLerp(MINIMUM_WETLAND_RAINFALL, FULL_WETLAND_RAINFALL, tile.rainfall);
+			float wetFactor = moistureFactor * waterFactor;
 			float flatFactor = FlatnessFactor(tile.hilliness);
-			if (rainFactor <= 0f || flatFactor <= 0f)
+			if (wetFactor <= 0f || flatFactor <= 0f)
 			{
 				tile.swampiness = 0f;
 				continue;
@@ -120,7 +131,7 @@ public sealed class SwampinessPass : IGenerationPass
 			float basin = BasinFactor(layer, tiles, tileId, tile.elevation, count);
 			float catchment = context.FlowAccumulation[tileId];
 			float collects = Mathf.Max(basin, catchment * FLOW_SHARE);
-			float swampiness = rainFactor * flatFactor * (BASIN_FLOOR + (1f - BASIN_FLOOR) * collects);
+			float swampiness = wetFactor * flatFactor * (BASIN_FLOOR + (1f - BASIN_FLOOR) * collects);
 			tile.swampiness = Mathf.Clamp01(swampiness);
 		}
 	}
