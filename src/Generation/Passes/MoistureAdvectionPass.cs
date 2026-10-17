@@ -40,8 +40,9 @@ public sealed class MoistureAdvectionPass : IGenerationPass
 	// dry interior. Where both hold in full, the driest interior keeps this share of its
 	// rain instead. Without it, almost every equatorial interior sat at the dry floor,
 	// short of the 2000mm the game's rainforests need, and the hot middle of each
-	// continent went to temperate forest.
-	private const float RECYCLED_RAINFALL_FACTOR = 0.75f;
+	// continent went to temperate forest. At 0.75 it overshot the other way, with 70% of
+	// equatorial land above 2000mm.
+	private const float RECYCLED_RAINFALL_FACTOR = 0.65f;
 	
 	// Warmth, in degrees, over which the land starts and finishes handing water back.
 	private const float RECYCLING_START_TEMPERATURE = 18f;
