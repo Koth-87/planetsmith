@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Equatorial interiors stay wet far from the sea, so rainforest takes more of the equator from temperate forest
 - Swamps and bogs form wherever the climate leaves water standing, not only under heavy rain, so cool lowlands get their wetlands and the tropics fewer
+- Odyssey's grasslands hold back from the humid tropics, leaving the wettest equatorial ground to rainforest
 
 ### Fixed
 

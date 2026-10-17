@@ -58,8 +58,10 @@ public sealed class BiomePass : IGenerationPass
 	// A biome that only accepts rainfall up to this is treated as belonging to dry
 	// country. Set above the semi-arid scrub band (which tolerates up to 2000mm), or
 	// scrub escapes the gate and takes over every warm region, since its score rises
-	// with temperature faster than forest's does.
-	private const float DRY_BIOME_RAINFALL_LIMIT = 1600f;
+	// with temperature faster than forest's does. Odyssey's grasslands, which stop at
+	// 2500mm and read as 2000 on the probe's steps, did exactly that at 1600: they took
+	// most of the humid equator, soaked ground included, and left rainforest a fifth.
+	private const float DRY_BIOME_RAINFALL_LIMIT = 2000f;
 	
 	// Effective moisture above which land is no longer meaningfully water limited.
 	private const float HUMID_ARIDITY_INDEX = 0.65f;
