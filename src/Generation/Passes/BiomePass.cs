@@ -189,7 +189,8 @@ public sealed class BiomePass : IGenerationPass
 			// Score it, and keep it if it beats the rest
 			try
 			{
-				float score = worker.GetScore(biome, tile, tile.tile);
+				float workerScore = worker.GetScore(biome, tile, tile.tile);
+				float score = workerScore;
 				// Straight after the worker, which is where the mod that owns these
 				// settings puts them, so the two agree about what a score means before
 				// anything else touches it.
@@ -199,7 +200,7 @@ public sealed class BiomePass : IGenerationPass
 				}
 				score = ApplyFrostGate(biome, score, winterMinimum);
 				score = ApplyAridityGate(biome, score, aridityIndex);
-				score = ApplyPlayerTuning(score, tuning);
+				score = ApplyPlayerTuning(score, tuning, workerScore > 0f || !world.shouldLimitOffsetsToSuitableGround);
 				if (best == null || score > bestScore)
 				{
 					best = biome;
@@ -274,8 +275,14 @@ public sealed class BiomePass : IGenerationPass
 	/// win or lose; the commonality multiplier then stretches or shrinks the ground it
 	/// takes, and is applied only to a winning score so that scaling a biome up cannot
 	/// drag a negative score further down.
+	///
+	/// A raised offset is held back on ground the biome's own worker refused, unless the
+	/// player has switched that limit off. A worker refuses with a score of zero or less,
+	/// and lifting that over the line put a biome where it could never grow: raised
+	/// Scarlands spread far past the ruins their worker keeps them to, and a raised
+	/// desert took the rainforests. A lowered offset always applies.
 	/// </summary>
-	private static float ApplyPlayerTuning(float score, BiomeSettings? tuning)
+	private static float ApplyPlayerTuning(float score, BiomeSettings? tuning, bool canRaiseScore)
 	{
 		// Sanity check
 		if (tuning == null)
@@ -284,7 +291,10 @@ public sealed class BiomePass : IGenerationPass
 		}
 		
 		// Shift, then scale a winning score
-		score += tuning.scoreOffset;
+		if (tuning.scoreOffset < 0f || canRaiseScore)
+		{
+			score += tuning.scoreOffset;
+		}
 		if (score > 0f)
 		{
 			score *= tuning.commonality;

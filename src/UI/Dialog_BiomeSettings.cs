@@ -154,5 +154,10 @@ public class Dialog_BiomeSettings : PlanetsmithDialog
 		{
 			world.ResetAllBiomes();
 		}
+		
+		// Draw the offset limit switch
+		Rect limitRect = new(resetRect.xMax + COLUMN_GAP * 2f, resetRect.y + 3f, inRect.xMax - resetRect.xMax - COLUMN_GAP * 2f, 24f);
+		Widgets.CheckboxLabeled(limitRect, "Planetsmith_LimitOffsets".Translate(), ref world.shouldLimitOffsetsToSuitableGround, placeCheckboxNearText: true);
+		TooltipHandler.TipRegion(limitRect, "Planetsmith_LimitOffsetsTip".Translate());
 	}
 }

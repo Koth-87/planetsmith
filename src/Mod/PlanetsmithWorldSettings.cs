@@ -30,6 +30,13 @@ public class PlanetsmithWorldSettings : IExposable
 	/// </summary>
 	private Dictionary<string, BiomeSettings> biomes = new();
 	
+	/// <summary>
+	/// Whether a raised score offset only helps a biome on ground its own worker accepts.
+	/// Turned off, an offset can lift a biome onto ground the worker refuses outright,
+	/// which is how every offset worked up to 1.2.1.
+	/// </summary>
+	public bool shouldLimitOffsetsToSuitableGround = true;
+	
 	/// <summary>True once the player has moved any biome away from how its worker scores it.</summary>
 	public bool HasAdjustedBiomes
 	{
@@ -94,6 +101,7 @@ public class PlanetsmithWorldSettings : IExposable
 	public void ResetAllBiomes()
 	{
 		biomes.Clear();
+		shouldLimitOffsetsToSuitableGround = true;
 	}
 	
 	public PlanetsmithWorldSettings Clone()
@@ -105,6 +113,7 @@ public class PlanetsmithWorldSettings : IExposable
 			targetLandFraction = targetLandFraction,
 			axialTilt = axialTilt,
 			tuning = tuning.Clone(),
+			shouldLimitOffsetsToSuitableGround = shouldLimitOffsetsToSuitableGround,
 		};
 		
 		// Copy each biome's adjustments
@@ -139,5 +148,9 @@ public class PlanetsmithWorldSettings : IExposable
 		{
 			biomes = new Dictionary<string, BiomeSettings>();
 		}
+		
+		// Save or load the offset limit
+		// Older planets and presets have no entry, and read as the limit being on.
+		Scribe_Values.Look(ref shouldLimitOffsetsToSuitableGround, "limitOffsetsToSuitableGround", defaultValue: true);
 	}
 }
