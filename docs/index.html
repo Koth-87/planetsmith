@@ -278,6 +278,7 @@
 		<h2 id="sea">The sea and its coasts</h2>
 		<h3>Moisture carried inland</h3>
 		<p>The ocean is the source of nearly all rain. Wind carries that moisture inland, and it thins with every stretch of land it crosses. Coasts stay damp, and the deep interior of a large continent runs dry no matter its latitude.</p>
+		<p>The warm, rainy tropics are the exception. Heat and heavy rain keep handing water back to the air, so the wind picks up nearly as much as it drops and an equatorial interior stays wet a long way from any sea, the way the Amazon does.</p>
 		<h3>Ocean currents</h3>
 		<p>Which coast of a landmass you stand on matters enormously, and the deciding factor is whether the wind arrives off the water or off the land.</p>
 		<ul>
@@ -297,7 +298,7 @@
 		<h3>Lakes</h3>
 		<p>Some hollows collect a great deal of water and have no way out, being ringed entirely by higher ground. Those fill. It is how the Caspian and the Great Salt Lake came to be, and it is the one place a large body of water belongs nowhere near a coast.</p>
 		<h3>Wetlands</h3>
-		<p>Marsh forms where water arrives and struggles to leave: flat ground, dips that collect it, and the floodplains of anything large enough to be called a river.</p>
+		<p>Marsh forms where water arrives and struggles to leave: flat ground, dips that collect it, and the floodplains of anything large enough to be called a river. The climate decides whether the water stays, judged by effective moisture rather than raw rainfall, so a cool, damp lowland grows bog as readily as the tropics grow swamp.</p>
 
 		<h2 id="biomes-chosen">How biomes are chosen</h2>
 		<p>Every biome looks at every tile and says how well it suits the place. The best fit wins. On top of that, Planetsmith applies two rules of its own.</p>
@@ -305,6 +306,7 @@
 		<p>A tile can have a perfectly pleasant average temperature and still freeze solid every winter. Biomes that cannot survive frost are held back from those places, so a jungle no longer appears somewhere that spends three months below zero.</p>
 		<h3>The moisture rule</h3>
 		<p>Rainfall alone is misleading. Four hundred millimetres falling on baking desert and the same falling on cold tundra support utterly different life, because heat decides how much of it evaporates straight back out. Planetsmith weighs the two together, so dry-country biomes stay in country that is genuinely parched, and a cold place with little rain reads as damp, which it is.</p>
+		<p>Grasslands sit between the two. They take more rain than dry country, but give way on the wettest ground they would accept, so the soaked equator goes to rainforest instead of open grass.</p>
 
 		<h2 id="planet">Planet settings</h2>
 		<p>Reached from the <b>Planetsmith</b> button on the world creation page.</p>
@@ -338,6 +340,7 @@
 			<tr><td>Score offset</td><td>A flat nudge, pushing it into or out of places it narrowly loses or wins</td></tr>
 		</table>
 		<p>Turning biomes off is also how you make a single-biome planet. Planetsmith reads it as an instruction to spread whatever is left, so the remaining biomes will take ground they would not otherwise have earned.</p>
+		<p>Next to the <b>Reset all biomes</b> button, <b>Raised offsets only where a biome can grow</b> changes what a raised score offset does. Off, the default, a raised offset can carry a biome onto ground it would never take on its own, such as desert over rainforest. On, it only helps the biome win more of the ground it already accepts, which keeps a raised Scarlands with its ruins. Lowering an offset works the same either way.</p>
 		<div class="note">
 			<b>Sea, lake and sea ice are not listed.</b> Those tiles have no dry-land alternative to fall back on, so switching them off could only produce a planet that fails to draw. Ice sheet <i>is</i> listed, being dry land, and a world without polar caps is a perfectly reasonable thing to ask for.
 		</div>

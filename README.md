@@ -28,22 +28,22 @@ Planetsmith is an original, independent, clean-room implementation. It is **not*
 * **Temperature** falls from equator to pole along a curve matched to RimWorld's own, then drops with altitude.
 * **Rainfall** arrives in the three great latitude belts: the wet equator, the dry subtropics, and the mid-latitude storm track.
 * **Rain shadows** form where prevailing winds climb into high ground, soaking the windward slope and starving the far side.
-* **Moisture** is carried inland from the sea by the wind and gives out as it goes, so continental interiors run dry.
+* **Moisture** is carried inland from the sea by the wind and gives out as it goes, so continental interiors run dry. The warm, rainy tropics are the exception, since heat and heavy rain keep handing water back to the air and their interiors stay wet.
 * **Ocean currents** temper the coasts: mild and damp where the wind comes off the water, cold and parched where it blows offshore in the subtropics, which is how deserts come to sit on a shoreline.
 * **Seasons** swing further from the sea and further from the equator, and their depth is set by the planet's axial tilt.
 * **Monsoons** break over tropical coasts with a large landmass behind them, where the land bakes hotter than the sea each summer and drags the ocean air inland.
 * **Effective moisture** weighs rainfall against how much of it the heat would evaporate, so a cold dry place reads as damp and a hot wet one can still be arid.
 * **Drainage** follows the water downhill from the peaks, gathering whole watersheds into the valleys.
 * **Lakes** fill the hollows that rivers run into but never out of.
-* **Wetlands** form where water collects, in dips and along floodplains.
-* **Biomes** are then chosen competitively, with frost-shy biomes held back from killing winters and dry-country biomes kept off ground that is not truly parched.
+* **Wetlands** form where water collects, in dips and along floodplains, wherever the climate is damp enough to leave it standing.
+* **Biomes** are then chosen competitively, with frost-shy biomes held back from killing winters, dry-country biomes kept off ground that is not truly parched, and grasslands giving way to forest on the wettest ground they would take.
 
 ## What you can control
 
-* **Per planet, from the world creation page**: sea level and land fraction, axial tilt, and a set of dials over the simulation itself, from global temperature and rainfall through rain shadows, inland moisture, monsoon strength, season intensity and coastal influence.
-* **Per biome**: turn one off entirely, change how much ground it takes, or nudge its score. Biomes added by other mods are listed automatically.
+* **Per planet, from the world creation page**: sea level and land fraction, axial tilt, and a set of dials over the simulation itself, from global temperature, cooling with altitude and rainfall through rain shadows, inland moisture, monsoon strength, season intensity and coastal influence.
+* **Per biome**: turn one off entirely, change how much ground it takes, or nudge its score. A switch keeps raised scores to ground the biome can grow on. Biomes added by other mods are listed automatically.
 * **Presets**: save any of the above under a name and reuse it for every planet afterwards.
-* **Map modes**: shade the planet by temperature, rainfall, wetlands, water flow, effective moisture, monsoon, winter temperature, distance from sea, or coastal currents.
+* **Map modes**: shade the planet by temperature, rainfall, rain shadow, wetlands, water flow, effective moisture, monsoon, winter temperature, distance from sea, or coastal currents.
 
 ## Compatibility
 
