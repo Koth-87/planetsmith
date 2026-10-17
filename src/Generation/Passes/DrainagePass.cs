@@ -22,7 +22,8 @@ namespace Planetsmith.Generation.Passes;
 /// works, and it is where salt flats and inland lakes belong.
 ///
 /// The totals span such a range that they are stored on a logarithmic scale, so a
-/// mere damp hollow can still be told apart from a major river's floodplain.
+/// mere damp hollow can still be told apart from a major river's floodplain. The
+/// number of tiles draining through each one is counted alongside.
 /// </summary>
 public sealed class DrainagePass : IGenerationPass
 {
@@ -78,6 +79,7 @@ public sealed class DrainagePass : IGenerationPass
 		int count = tiles.Count;
 		int[] downhill = new int[count];
 		float[] flow = new float[count];
+		int[] upstream = context.UpstreamTiles;
 		List<int> landTiles = new(count);
 		for (int tileId = 0; tileId < count; tileId++)
 		{
@@ -89,6 +91,7 @@ public sealed class DrainagePass : IGenerationPass
 			landTiles.Add(tileId);
 			// Each tile starts with the water that fell on it.
 			flow[tileId] = Mathf.Max(0f, tiles[tileId].rainfall);
+			upstream[tileId] = 1;
 			downhill[tileId] = LowestNeighbor(layer, tiles, tileId, count);
 		}
 		
@@ -108,6 +111,7 @@ public sealed class DrainagePass : IGenerationPass
 			if (next >= 0 && tiles[next].elevation > 0f)
 			{
 				flow[next] += flow[tileId];
+				upstream[next] += upstream[tileId];
 			}
 		}
 		

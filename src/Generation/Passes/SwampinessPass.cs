@@ -44,6 +44,14 @@ public sealed class SwampinessPass : IGenerationPass
 	// waterlogged even where the ground barely dips at all.
 	private const float FLOW_SHARE = 0.6f;
 	
+	// Tiles draining through a tile over which it goes from an ordinary valley floor to a
+	// full floodplain, on a logarithmic scale. Counted in tiles rather than read from the
+	// flow score, which includes a tile's own rain and so rated a lone hilltop as half a
+	// river. Once wetness could reach full, that waterlogged nearly every flat tile in a
+	// humid climate and turned whole latitudes into bog.
+	private const float FLOODPLAIN_START_TILES = 10f;
+	private const float FLOODPLAIN_FULL_TILES = 500f;
+	
 	//// References and State
 	
 	private static readonly List<PlanetTile> neighbors = new();
@@ -60,6 +68,12 @@ public sealed class SwampinessPass : IGenerationPass
 			Hilliness.LargeHills => 0.2f,
 			_ => 0f, // mountainous, impassable, undefined
 		};
+	}
+	
+	/// <summary>How much of a floodplain a tile is, from the number of tiles draining through it.</summary>
+	private static float FloodplainShare(int upstreamTiles)
+	{
+		return Mathf.InverseLerp(Mathf.Log(FLOODPLAIN_START_TILES), Mathf.Log(FLOODPLAIN_FULL_TILES), Mathf.Log(Mathf.Max(1, upstreamTiles)));
 	}
 	
 	/// <summary>How far a tile sits below its land neighbours, as a share of a full basin.</summary>
@@ -129,7 +143,7 @@ public sealed class SwampinessPass : IGenerationPass
 			// Water collects here either because the ground dips, or because a whole
 			// catchment drains through; take whichever is the stronger claim.
 			float basin = BasinFactor(layer, tiles, tileId, tile.elevation, count);
-			float catchment = context.FlowAccumulation[tileId];
+			float catchment = FloodplainShare(context.UpstreamTiles[tileId]);
 			float collects = Mathf.Max(basin, catchment * FLOW_SHARE);
 			float swampiness = wetFactor * flatFactor * (BASIN_FLOOR + (1f - BASIN_FLOOR) * collects);
 			tile.swampiness = Mathf.Clamp01(swampiness);

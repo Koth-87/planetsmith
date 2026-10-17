@@ -86,6 +86,12 @@ public sealed class GenerationContext
 	public readonly float[] FlowAccumulation;
 	
 	/// <summary>
+	/// Per-tile count of land tiles whose runoff passes through, the tile itself
+	/// included: 1 on a ridge, thousands along a major river. Filled by DrainagePass.
+	/// </summary>
+	public readonly int[] UpstreamTiles;
+	
+	/// <summary>
 	/// Per-tile share of the moisture the arriving air has already left on high
 	/// ground upwind: 0 where nothing has been taken from it, 1 where it has been
 	/// wrung out entirely. Filled by OrographyPass.
@@ -168,6 +174,7 @@ public sealed class GenerationContext
 		AridityIndex = new float[TileCount];
 		MonsoonStrength = new float[TileCount];
 		FlowAccumulation = new float[TileCount];
+		UpstreamTiles = new int[TileCount];
 		RainShadow = new float[TileCount];
 		WinterMinimumTemperature = new float[TileCount];
 		SummerMaximumTemperature = new float[TileCount];
