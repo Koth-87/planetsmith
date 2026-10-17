@@ -68,15 +68,19 @@ public sealed class BiomePass : IGenerationPass
 	private const float ARIDITY_PENALTY_PER_UNIT = 25f;
 	
 	// A biome that accepts more rain than dry country but still stops short, up to this
-	// on the probe's steps, is treated as sub-humid: savanna and grassland. Those give
-	// way to forest where the rain matches what the heat evaporates, not where semi-arid
-	// ground ends, and the penalty is steep so rainforest takes the soaked ground.
-	// Odyssey's grasslands, which stop at 2500mm and read as 2000 on the probe, otherwise
-	// took most of the equator, soaked ground included. Treating them as dry country
-	// overshot: they lost the drier tropics too, and temperate forest took them.
+	// on the probe's steps, is treated as sub-humid: savanna and grassland. Those give way
+	// only on the wettest band they accept, from their probed limit up, which is where
+	// forest takes over. Odyssey's grasslands, which stop at 2500mm and read as 2000 on
+	// the probe, otherwise took most of the equator, soaked ground included. Treating
+	// them as dry country overshot, and so did a penalty from an effective moisture of
+	// 1.0: both took 1500 to 2000mm tropics from them that rainforest cannot use, and
+	// temperate forest got it instead. Rainfall rather than moisture also keeps the
+	// heat from shielding the hottest soaked ground.
 	private const float SUBHUMID_BIOME_RAINFALL_LIMIT = 2000f;
-	private const float SUBHUMID_ARIDITY_INDEX = 1f;
-	private const float SUBHUMID_PENALTY_PER_UNIT = 60f;
+	
+	// Score a sub-humid biome loses on the wettest band it accepts. Covers the lead
+	// grassland's steep warmth bonus gives it over rainforest even on the hottest ground.
+	private const float SUBHUMID_WET_EDGE_PENALTY = 15f;
 	
 	// Worldbuilder stores a biome's frequency in tenths, so ten is a biome left alone.
 	private const float WORLDBUILDER_FREQUENCY_SCALE = 10f;
@@ -208,7 +212,7 @@ public sealed class BiomePass : IGenerationPass
 					score = ApplyExternalTuning(score, external[index]);
 				}
 				score = ApplyFrostGate(biome, score, winterMinimum);
-				score = ApplyAridityGate(biome, score, aridityIndex);
+				score = ApplyAridityGate(biome, score, aridityIndex, tile.rainfall);
 				score = ApplyPlayerTuning(score, tuning, workerScore > 0f || !world.shouldLimitOffsetsToSuitableGround);
 				if (best == null || score > bestScore)
 				{
@@ -253,10 +257,10 @@ public sealed class BiomePass : IGenerationPass
 	/// Vanilla decides deserts on rainfall alone, so a chilly place with little rain
 	/// looks like a desert to it, when in truth almost nothing evaporates there and
 	/// the ground stays damp. Comparing effective moisture instead keeps deserts in
-	/// country that is genuinely parched. Sub-humid biomes such as grassland are held
-	/// back the same way, but only from ground humid enough for forest.
+	/// country that is genuinely parched. Sub-humid biomes such as grassland are only
+	/// held back from the wettest band of rain they accept.
 	/// </summary>
-	private static float ApplyAridityGate(BiomeDef biome, float score, float aridityIndex)
+	private static float ApplyAridityGate(BiomeDef biome, float score, float aridityIndex, float rainfall)
 	{
 		// Sanity check
 		if (score <= 0f)
@@ -275,17 +279,14 @@ public sealed class BiomePass : IGenerationPass
 			return score; // takes any amount of rain
 		}
 		
-		// Pick where the biome gives way
-		bool isDryCountry = wetLimit <= DRY_BIOME_RAINFALL_LIMIT;
-		float threshold = isDryCountry ? HUMID_ARIDITY_INDEX : SUBHUMID_ARIDITY_INDEX;
-		float penaltyPerUnit = isDryCountry ? ARIDITY_PENALTY_PER_UNIT : SUBHUMID_PENALTY_PER_UNIT;
-		if (aridityIndex <= threshold)
+		// Hold sub-humid biomes back from the wet end of their range
+		if (wetLimit > DRY_BIOME_RAINFALL_LIMIT)
 		{
-			return score;
+			return rainfall >= wetLimit ? score - SUBHUMID_WET_EDGE_PENALTY : score;
 		}
 		
-		// Penalise how far past it the ground is
-		return score - penaltyPerUnit * (aridityIndex - threshold);
+		// Penalise dry-country biomes for how far past humid the ground is
+		return score - ARIDITY_PENALTY_PER_UNIT * (aridityIndex - HUMID_ARIDITY_INDEX);
 	}
 	
 	/// <summary>
