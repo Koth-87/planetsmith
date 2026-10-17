@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- RimWorld 1.7 support, running the same build as 1.6
 - Translation support: every menu, tooltip and message now reads its text from a language file
 - A biome menu switch that keeps raised offsets to ground the biome would accept, so raised Scarlands stay with their ruins
 - The log lists the most common biomes and how much ground is waterlogged in each band of latitude

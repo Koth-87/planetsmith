@@ -7,6 +7,7 @@
 	<url>https://aspctt.github.io/planetsmith/</url>
 	<supportedVersions>
 		<li>1.6</li>
+		<li>1.7</li>
 	</supportedVersions>
 	<modIconPath IgnoreIfNoMatchingField="True">UI/Planetsmith_ModIcon</modIconPath>
 	<description>Planetsmith is a world-generation overhaul: a physically-motivated climate simulation and a competitive biome-scoring system that replace vanilla's binary biome placement, plus per-world generation controls and presets.
