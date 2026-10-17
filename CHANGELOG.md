@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-17
+
 ### Added
 
 - Translation support: every menu, tooltip and message now reads its text from a language file
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The map mode button showing on maps in orbit, where the planet is only a backdrop
+- Missing texture errors on snowy extreme desert mountains
 
 ## [1.2.1] - 2026-08-04
 
@@ -81,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First release.
 
-[Unreleased]: https://github.com/aspctt/planetsmith/compare/1.2.1...HEAD
+[Unreleased]: https://github.com/aspctt/planetsmith/compare/1.2.2...HEAD
+[1.2.2]: https://github.com/aspctt/planetsmith/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/aspctt/planetsmith/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/aspctt/planetsmith/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/aspctt/planetsmith/compare/1.0.1...1.1.0

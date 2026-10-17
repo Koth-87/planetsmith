@@ -1,7 +1,7 @@
 # <p align=center style="text-align: center;"> Planetsmith </p>
 
 <p align="center" style="text-align: center;">
-	<img alt="Version" src="https://img.shields.io/badge/Version-1.2.1-orange">
+	<img alt="Version" src="https://img.shields.io/badge/Version-1.2.2-orange">
 	<img alt="Available for" src="https://img.shields.io/badge/Available_for-1.6_|_1.7-blue">
 	<img alt="License" src="https://img.shields.io/badge/License-GPL--3.0--or--later-red">
 </p>
