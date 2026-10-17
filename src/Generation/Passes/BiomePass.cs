@@ -295,11 +295,11 @@ public sealed class BiomePass : IGenerationPass
 	/// takes, and is applied only to a winning score so that scaling a biome up cannot
 	/// drag a negative score further down.
 	///
-	/// A raised offset is held back on ground the biome's own worker refused, unless the
-	/// player has switched that limit off. A worker refuses with a score of zero or less,
-	/// and lifting that over the line put a biome where it could never grow: raised
+	/// When the player switches the limit on, a raised offset is held back on ground the
+	/// biome's own worker refused. A worker refuses with a score of zero or less, and
+	/// lifting that over the line puts a biome where it could never grow: raised
 	/// Scarlands spread far past the ruins their worker keeps them to, and a raised
-	/// desert took the rainforests. A lowered offset always applies.
+	/// desert takes the rainforests. A lowered offset always applies.
 	/// </summary>
 	private static float ApplyPlayerTuning(float score, BiomeSettings? tuning, bool canRaiseScore)
 	{

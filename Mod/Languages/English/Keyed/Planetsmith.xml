@@ -67,7 +67,7 @@
 	<Planetsmith_BiomeScoreOffset>Score offset</Planetsmith_BiomeScoreOffset>
 	<Planetsmith_ResetAllBiomes>Reset all biomes</Planetsmith_ResetAllBiomes>
 	<Planetsmith_LimitOffsets>Raised offsets only where a biome can grow</Planetsmith_LimitOffsets>
-	<Planetsmith_LimitOffsetsTip>On: raising a biome's offset helps it win more of the ground it already accepts.\nOff: a raised offset can also place it on ground it would never take, such as desert over rainforest, as in earlier versions.\n\nLowering an offset works everywhere either way.</Planetsmith_LimitOffsetsTip>
+	<Planetsmith_LimitOffsetsTip>On: raising a biome's offset helps it win more of the ground it already accepts.\nOff: a raised offset can also place it on ground it would never take, such as desert over rainforest.\n\nLowering an offset works everywhere either way.</Planetsmith_LimitOffsetsTip>
 	
 	<!-- Presets -->
 	<Planetsmith_PresetsTitle>Planetsmith: presets</Planetsmith_PresetsTitle>
