@@ -30,5 +30,6 @@ This is an original, clean-room implementation. It does not include code from, o
 	<incompatibleWith>
 		<li>sjaandi.realtiltmod</li>
 		<li>koth.RealisticPlanets1.6</li>
+		<li>koth.RealisticPlanets2</li>
 	</incompatibleWith>
 </ModMetaData>
