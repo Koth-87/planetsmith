@@ -38,6 +38,9 @@ public static class ClimateReport
 	private const float ARID_RAINFALL = 400f;
 	private const float SOAKED_RAINFALL = 2000f;
 	
+	// Swampiness from which the game's swamp and bog biomes will take a tile at all.
+	private const float WATERLOGGED_SWAMPINESS = 0.5f;
+	
 	// How many of a band's most common biomes are named; the rest are summed together.
 	private const int REPORTED_BIOMES_PER_BAND = 4;
 	
@@ -86,7 +89,7 @@ public static class ClimateReport
 	
 	//// Public API
 	
-	/// <summary>Logs the rainfall over land band by band, and what it leaves the rivers.</summary>
+	/// <summary>Logs the rainfall and waterlogged ground over land band by band, and what it leaves the rivers.</summary>
 	public static void LogSummary(GenerationContext context)
 	{
 		// Tally the land in each band
@@ -95,6 +98,7 @@ public static class ClimateReport
 		int[] land = new int[BAND_COUNT];
 		int[] arid = new int[BAND_COUNT];
 		int[] soaked = new int[BAND_COUNT];
+		int[] waterlogged = new int[BAND_COUNT];
 		double[] total = new double[BAND_COUNT];
 		for (int tileId = 0; tileId < tiles.Count; tileId++)
 		{
@@ -115,6 +119,10 @@ public static class ClimateReport
 			{
 				soaked[band]++;
 			}
+			if (tile.swampiness >= WATERLOGGED_SWAMPINESS)
+			{
+				waterlogged[band]++;
+			}
 		}
 		
 		// Describe each band
@@ -132,7 +140,8 @@ public static class ClimateReport
 			double mean = total[band] / land[band];
 			float aridShare = (float)arid[band] / land[band];
 			float soakedShare = (float)soaked[band] / land[band];
-			bands.Add($"{BandName(band)} {mean:F0}mm ({aridShare:P0} arid, {soakedShare:P0} soaked)");
+			float waterloggedShare = (float)waterlogged[band] / land[band];
+			bands.Add($"{BandName(band)} {mean:F0}mm ({aridShare:P0} arid, {soakedShare:P0} soaked, {waterloggedShare:P0} waterlogged)");
 		}
 		Log.Message($"[Planetsmith] Rainfall over land by latitude: {string.Join(", ", bands)}.");
 		
