@@ -63,6 +63,12 @@ public static class PlanetsmithGeneration
 	/// <summary>Runs every pass over the finished surface, then reports and keeps the climate it made.</summary>
 	public static void RunPostTerrain(PlanetLayer layer)
 	{
+		// Say which planet this is
+		// Reports are only comparable between runs of the same seed and settings, and
+		// nothing else in the log records them.
+		WorldInfo info = Find.World.info;
+		Log.Message($"[Planetsmith] Generating seed '{info.seedString}' at {info.planetCoverage:P0} coverage, {info.overallRainfall} rainfall, {info.overallTemperature} temperature.");
+		
 		// Say where the tilt came from
 		GenerationContext context = new(layer);
 		if (context.IsTiltHandledExternally)
