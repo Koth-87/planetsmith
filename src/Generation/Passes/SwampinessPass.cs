@@ -25,8 +25,10 @@ public sealed class SwampinessPass : IGenerationPass
 	// evaporate away. On rainfall alone a swamp needed over 1000mm, which only the wet
 	// tropics reach, so temperate swamps grew in equatorial inlands and almost nowhere
 	// temperate, while cool lowlands that hardly evaporate anything never got their bogs.
+	// Full wetness at 1.5 sat above the 1.2 or so a wet equator reaches against its heat,
+	// which kept tropical floodplains from ever turning to swamp.
 	private const float MINIMUM_WETLAND_ARIDITY_INDEX = 0.5f;
-	private const float FULL_WETLAND_ARIDITY_INDEX = 1.5f;
+	private const float FULL_WETLAND_ARIDITY_INDEX = 1.25f;
 	
 	// Rainfall (mm) over which ground goes from too little water to pool at all to
 	// enough. Keeps polar deserts dry, where almost nothing evaporates either.
