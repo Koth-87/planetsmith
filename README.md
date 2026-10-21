@@ -85,6 +85,10 @@ Please note the copyrights and trademarks in [NOTICE](./NOTICE).
 
 * Andreas Pardeike (brrainz): Harmony runtime patching library: [github](https://github.com/pardeike/Harmony)
 
+### Translations
+
+* ylc395: Simplified Chinese: [github](https://github.com/ylc395)
+
 ### Acknowledgements
 
 * koth-87: author of Realistic Planets 2, whose feature set inspired Planetsmith's design. Planetsmith is a clean-room reimplementation and contains none of its code.
